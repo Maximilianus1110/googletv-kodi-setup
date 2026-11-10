@@ -30,6 +30,14 @@ Dieses Setup verwandelt dein Kodi in ein blitzschnelles, modernes Mediacenter im
   * **Steuerkreuz Unten (▼):** Öffnet direkt im laufenden Video die **Staffel-Episoden-Schublade** (wie bei Prime Video) zum schnellen Folgenwechsel.
   * **OSD-Button 🔄:** Mitten im Video alternative Hoster/Streams auswählen (bei schlechter Videoqualität) und an exakt derselben Sekunde fortsetzen.
   * Optional auch vor dem Abspielen über das Kontextmenü (*Abspielen mit...* -> *Quelle manuell wählen*).
+* 🌙 **Nachtmodus / Dialog-Booster (DRC):**
+  * Per 1-Klick (OSD-Button 🌙) schaltet Kodi eine +10 dB Dynamikkompression ein: Leise Stimmen werden verständlich und laut, laute Explosionen sanft gedämpft.
+* ⏩ **Intro überspringen (TheIntroDB & 1-Klick OSD):**
+  * Erkennt Intros bekannter Serien automatisch online über TheIntroDB und zeigt das dezente Popup `⏩ Intro überspringen`.
+  * Zusätzlicher 1-Klick-Button ⏩ im Player OSD (+85s Sprung).
+* ⏱️ **Timeline mit echtem Serientitel & 5s Auto-Hide:**
+  * OSD zeigt nun vollständigen Serientitel, Staffel und Episodennummer statt nur „Es läuft“.
+  * Timeline blendet sich nach 5 Sekunden Inaktivität automatisch aus.
 * 📺 **YouTube & SmartTube Integration:**
   * Echte persönliche Empfehlungen deines Google-Kontos auf der Startseite (`FEwhat_to_watch`).
   * Gepatchter TV-OAuth Flow: Anmeldung über `google.com/device` ohne nervige Google-Sicherheitsblockaden.
@@ -77,6 +85,7 @@ Das Skript sichert automatisch deine bisherigen Keymaps, überträgt alle vorkon
 Alle Spezialbereiche sind detailliert im Ordner [`docs/`](docs/) beschrieben:
 
 * 🎮 [**Fernbedienungs-Belegung & Gesten**](docs/REMOTE_CONTROLS.md): Detaillierte Übersicht aller Tastenfunktionen während der Wiedergabe und im Hauptmenü.
+* 🌙 [**Nachtmodus, Intro-Skip & Timeline**](docs/NIGHTMODE_AND_INTROS_GUIDE.md): Dialog-Verstärkung, Intro-Erkennung via TheIntroDB und automatische Timeline-Ausblendung.
 * ⏩ [**Autoplay, Episodenschublade & Stream-Auswahl**](docs/AUTOPLAY_AND_STREAM_SELECT.md): Nahtlose Wiedergabe, Vorabladen im Hintergrund, Prime-Video-Episodenauswahl & Quellenwechsler.
 * 🎬 [**Trakt-Einrichtung („Weiterschauen“)**](docs/TRAKT_SETUP.md): Wie du dein kostenloses Trakt-Konto mit Kodi verbindest und den Netflix-Fortschrittsbalken aktivierst.
 * 📺 [**YouTube-Login & Startseite**](docs/YOUTUBE_SETUP.md): Google TV Geräte-Login ohne Sicherheitswarnung und Personalisierung deiner Empfehlungen.

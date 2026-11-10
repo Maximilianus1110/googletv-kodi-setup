@@ -6,6 +6,7 @@
     <animation effect="fade" end="0" start="100" time="300">WindowClose</animation>
     <onload>SetProperty(UID,$ESCINFO[Player.Title]$INFO[Player.Time(ss)],1146)</onload>
     <onload>SetProperty(UID,$ESCINFO[Player.Title]$INFO[Player.Time(ss)],1147)</onload>
+    <onload>AlarmClock(osd_timeout,RunScript(script.skinvariables,run_executebuiltin=special://skin/shortcuts/builtins/skinvariables-closeosd.json,use_rules=True),00:05,silent)</onload>
     <onunload>CancelAlarm(osd_timeout,true)</onunload>
     <controls>
 
@@ -193,6 +194,35 @@
                             <param name="icon">special://skin/extras/icons/refresh.png</param>
                             <param name="id">6009</param>
                             <param name="groupid">6109</param>
+                            <param name="itemgap">osd_itemgap</param>
+                        </include>
+
+                        <!-- Button 10: Nachtmodus (Dialog-Booster & DRC) -->
+                        <control type="button" id="6010">
+                            <include>Defs_OSD_Button</include>
+                            <onclick>CancelAlarm(osd_timeout,true)</onclick>
+                            <onclick>RunScript(special://skin/shortcuts/toggle_nightmode.py)</onclick>
+                            <onup>8200</onup>
+                        </control>
+                        <include content="OSD_Button_Icon_Overlay">
+                            <param name="icon">special://skin/extras/icons/moon.png</param>
+                            <param name="id">6010</param>
+                            <param name="groupid">6110</param>
+                            <param name="itemgap">osd_itemgap</param>
+                        </include>
+
+                        <!-- Button 11: Intro überspringen -->
+                        <control type="button" id="6011">
+                            <include>Defs_OSD_Button</include>
+                            <onclick>CancelAlarm(osd_timeout,true)</onclick>
+                            <onclick>RunScript(special://skin/shortcuts/skip_intro.py)</onclick>
+                            <onup>8200</onup>
+                            <visible>!VideoPlayer.Content(livetv)</visible>
+                        </control>
+                        <include content="OSD_Button_Icon_Overlay" condition="!VideoPlayer.Content(livetv)">
+                            <param name="icon">special://skin/extras/icons/forward-jump.png</param>
+                            <param name="id">6011</param>
+                            <param name="groupid">6111</param>
                             <param name="itemgap">osd_itemgap</param>
                         </include>
                     </control>

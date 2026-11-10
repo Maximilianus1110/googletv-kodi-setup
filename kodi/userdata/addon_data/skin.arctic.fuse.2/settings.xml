@@ -285,6 +285,6 @@
     <setting id="SkinConstant.Numeric.16" type="string">$NUMBER[16]</setting>
     <setting id="customrating.tvshows.item02" type="string">TMDb</setting>
     <setting id="skinvariables.skinuser.icon" type="string"></setting>
-    <setting id="osd_timeout" type="string"></setting>
+    <setting id="osd_timeout" type="string">5</setting>
     <setting id="OptionsTiles.02.Label" type="string"></setting>
 </settings>

@@ -945,9 +945,21 @@
         <value condition="Player.Caching">$LOCALIZE[439] $INFO[Player.CacheLevel,,%]</value>
         <value condition="!String.IsEmpty(Player.PlaySpeed) + !String.IsEqual(Player.PlaySpeed,1.00) + !String.IsEqual(Player.PlaySpeed,0.00)">$INFO[Player.PlaySpeed,$LOCALIZE[31071] ,x]</value>
         <value condition="!String.IsEmpty(Player.Chapter) + !String.IsEqual(Player.Chapter,00) + !String.IsEmpty(Player.ChapterCount) + !String.IsEqual(Player.ChapterCount,00) + [Player.Seeking | Player.HasPerformedSeek(3) | Integer.IsEqual(System.CurrentControlID,8200)]">$INFO[Player.Chapter,$LOCALIZE[21396] ,]$INFO[Player.ChapterCount, / ,]$INFO[Player.ChapterName, - ,]</value>
+        <value condition="Player.Paused + !String.IsEmpty(VideoPlayer.TVShowTitle)">$LOCALIZE[112] • $INFO[VideoPlayer.TVShowTitle]$VAR[Label_OSD_Plot_Episode_Number, • ,]$INFO[VideoPlayer.Title, • ,]</value>
+        <value condition="Player.Paused + !String.IsEmpty(VideoPlayer.Title)">$LOCALIZE[112] • $INFO[VideoPlayer.Title]</value>
         <value condition="Player.Paused">$LOCALIZE[112]</value>
-        <value condition="VideoPlayer.Content(livetv) + !String.IsEmpty(VideoPlayer.ChannelNumberLabel)">$INFO[VideoPlayer.ChannelNumberLabel,$LOCALIZE[19029] ,]</value>
+        <value condition="VideoPlayer.Content(livetv) + !String.IsEmpty(VideoPlayer.ChannelNumberLabel)">$INFO[VideoPlayer.ChannelNumberLabel,$LOCALIZE[19029] ,]$INFO[VideoPlayer.Title, • ,]</value>
+        <value condition="!String.IsEmpty(VideoPlayer.TVShowTitle) + !String.IsEmpty(VideoPlayer.Title) + !String.IsEqual(VideoPlayer.TVShowTitle,VideoPlayer.Title)">$INFO[VideoPlayer.TVShowTitle]$VAR[Label_OSD_Plot_Episode_Number, • ,]$INFO[VideoPlayer.Title, • ,]</value>
+        <value condition="!String.IsEmpty(VideoPlayer.TVShowTitle)">$INFO[VideoPlayer.TVShowTitle]$VAR[Label_OSD_Plot_Episode_Number, • ,]</value>
+        <value condition="!String.IsEmpty(VideoPlayer.Title)">$INFO[VideoPlayer.Title]</value>
+        <value condition="!String.IsEmpty(Player.Title)">$INFO[Player.Title]</value>
+        <value condition="!String.IsEmpty(VideoPlayer.ChannelName)">$INFO[VideoPlayer.ChannelName]$INFO[VideoPlayer.Title, • ,]</value>
         <value>$LOCALIZE[31134]</value>
+    </variable>
+
+    <variable name="Label_NightMode">
+        <value condition="String.IsEqual(Window(Home).Property(NightMode_Active),true)">🌙 Nachtmodus: An</value>
+        <value>🌙 Nachtmodus: Aus</value>
     </variable>
 
     <variable name="Label_VideoHDRCodec">
