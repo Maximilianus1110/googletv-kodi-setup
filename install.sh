@@ -50,7 +50,9 @@ echo -e "${GREEN}✓ Verbunden mit Gerät:${NC} ${CYAN}${DEVICE_ID}${NC}"
 # Prüfe nur Keymaps-Flag
 if [[ "${1:-}" == "--keymaps-only" ]]; then
     echo -e "\n${YELLOW}Übertrage nur die Fernbedienungs-Keymaps...${NC}"
-    adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "$REMOTE_KODI_DIR/userdata/keymaps/"
+    adb -s "$DEVICE_ID" shell "mkdir -p /sdcard/Download/kodi_stage/keymaps"
+    adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "/sdcard/Download/kodi_stage/keymaps/"
+    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/keymaps && cp -rf /sdcard/Download/kodi_stage/keymaps/* $REMOTE_KODI_DIR/userdata/keymaps/ && rm -rf /sdcard/Download/kodi_stage"
     echo -e "${GREEN}✓ Keymaps erfolgreich aktualisiert!${NC}"
     exit 0
 fi
@@ -82,17 +84,24 @@ echo -e "${GREEN}✓ Sicherung abgelegt in: /sdcard/kodi_backup_${BACKUP_DATE}${
 
 # 5. Dateien übertragen
 echo -e "\n${YELLOW}[4/5] Übertrage optimierte Add-ons, Skin & Konfigurationen...${NC}"
-echo -e "-> Erstelle Verzeichnisse auf dem Fernseher..."
-adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/addons $REMOTE_KODI_DIR/userdata/keymaps $REMOTE_KODI_DIR/userdata/addon_data"
+STAGE_DIR="/sdcard/Download/kodi_setup_stage"
+adb -s "$DEVICE_ID" shell "rm -rf $STAGE_DIR && mkdir -p $STAGE_DIR/addons $STAGE_DIR/userdata/keymaps $STAGE_DIR/userdata/addon_data"
 
 echo -e "-> Übertrage Fernbedienungs-Keymaps (player_controls.xml, secret_remote.xml)..."
-adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "$REMOTE_KODI_DIR/userdata/keymaps/"
+adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "$STAGE_DIR/userdata/keymaps/"
 
-echo -e "-> Übertrage Addon-Einstellungen (TMDb Helper, xStream, Scraper)..."
-adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/addon_data/"* "$REMOTE_KODI_DIR/userdata/addon_data/"
+echo -e "-> Übertrage Addon-Einstellungen (TMDb Helper, xStream, Scraper, UpNext)..."
+adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/addon_data/"* "$STAGE_DIR/userdata/addon_data/"
 
 echo -e "-> Übertrage gepatchte Add-ons & Arctic Fuse 2 Skin (ca. 120 MB, bitte kurz warten)..."
-adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/addons/"* "$REMOTE_KODI_DIR/addons/"
+adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/addons/"* "$STAGE_DIR/addons/"
+
+echo -e "-> Installiere Dateien im Kodi-Hauptverzeichnis..."
+adb -s "$DEVICE_ID" shell "
+mkdir -p $REMOTE_KODI_DIR/addons $REMOTE_KODI_DIR/userdata/keymaps $REMOTE_KODI_DIR/userdata/addon_data
+cp -rf $STAGE_DIR/* $REMOTE_KODI_DIR/
+rm -rf $STAGE_DIR
+"
 
 # 6. Kodi neu starten
 echo -e "\n${YELLOW}[5/5] Starte Kodi neu...${NC}"
