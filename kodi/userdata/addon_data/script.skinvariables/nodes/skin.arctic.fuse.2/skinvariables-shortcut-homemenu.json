@@ -1,0 +1,297 @@
+[
+    {
+        "label": "Start & Trends",
+        "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie",
+        "icon": "special://skin/extras/icons/video.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-19ada9cd",
+        "guid": "guid-01dcc5fb",
+        "submenulist_label": "Entdecken",
+        "submenulist_path": "plugin://plugin.video.themoviedb.helper/",
+        "submenulist_icon": "special://skin/extras/icons/video.png",
+        "submenulist_target": "videos",
+        "widgets": [
+            {
+                "label": "▶️ Weiterschauen",
+                "icon": "special://skin/extras/icons/play.png",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_inprogress&widget=true",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "📺 Nächste Episoden",
+                "icon": "special://skin/extras/icons/tv.png",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_nextepisodes&tmdb_type=tv&widget=true",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "⭐ Meine YouTube Vorschläge",
+                "icon": "special://skin/extras/icons/video.png",
+                "path": "plugin://plugin.video.youtube/special/recommendations/",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "🔥 YouTube Trends",
+                "icon": "special://skin/extras/icons/video.png",
+                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "🔥 Filme im Trend (Heute)",
+                "icon": "special://skin/extras/icons/film.png",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie&widget=true",
+                "target": "videos",
+                "widget_style": "Poster"
+            },
+            {
+                "label": "📺 Serien im Trend (Heute)",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=tv&widget=true",
+                "icon": "special://skin/extras/icons/tv.png",
+                "target": "videos",
+                "widget_style": "Poster"
+            },
+            {
+                "label": "🍿 Aktuell im Kino",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=now_playing&tmdb_type=movie&widget=true",
+                "icon": "special://skin/extras/icons/film.png",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "⭐ Beliebteste Filme",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=popular&tmdb_type=movie&widget=true",
+                "icon": "special://skin/extras/icons/film.png",
+                "target": "videos",
+                "widget_style": "Poster"
+            },
+            {
+                "label": "🏆 Beliebteste Serien",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=popular&tmdb_type=tv&widget=true",
+                "icon": "special://skin/extras/icons/tv.png",
+                "target": "videos",
+                "widget_style": "Poster"
+            },
+            {
+                "label": "📡 Neue Serienfolgen",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=airing_today&tmdb_type=tv&widget=true",
+                "icon": "special://skin/extras/icons/tv.png",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "🥇 Bestbewertete Filme aller Zeiten",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=top_rated&tmdb_type=movie&widget=true",
+                "icon": "special://skin/extras/icons/list-ol.png",
+                "target": "videos",
+                "widget_style": "Poster"
+            }
+        ]
+    },
+    {
+        "label": "Add-ons & Live-TV",
+        "path": "addons://sources/video/",
+        "icon": "special://skin/extras/icons/addon.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-19ada9cd",
+        "guid": "guid-82cc4511",
+        "submenu": [
+            {
+                "label": "xStream öffnen",
+                "icon": "special://skin/extras/icons/addon.png",
+                "path": "plugin://plugin.video.xstream/",
+                "target": "videos"
+            },
+            {
+                "label": "VAVOO Live-TV öffnen",
+                "path": "plugin://plugin.video.vavooto/?action=live",
+                "icon": "special://skin/extras/icons/livetv.png",
+                "target": "videos"
+            },
+            {
+                "label": "Alle Video-Add-ons",
+                "path": "addons://sources/video/",
+                "icon": "special://skin/extras/icons/addon.png",
+                "target": "videos"
+            },
+            {
+                "label": "🔒 Archiv (+18 PIN)",
+                "icon": "special://skin/extras/icons/lock.png",
+                "path": "RunScript(special://skin/shortcuts/open_adult.py)",
+                "target": "videos"
+            },
+            {
+                "label": "🔑 YouTube Konto verbinden",
+                "icon": "special://skin/extras/icons/video.png",
+                "path": "RunPlugin(plugin://plugin.video.youtube/sign/in/)",
+                "target": "videos"
+            }
+        ],
+        "widgets": [
+            {
+                "label": "Streaming Add-ons (xStream, Vavoo, TMDb)",
+                "icon": "special://skin/extras/icons/addon.png",
+                "path": "addons://sources/video/",
+                "target": "videos",
+                "widget_style": "Square"
+            },
+            {
+                "label": "📡 VAVOO Live-TV Gruppen",
+                "path": "plugin://plugin.video.vavooto/?action=group_tv&type=vavoo",
+                "icon": "special://skin/extras/icons/livetv.png",
+                "target": "videos",
+                "widget_style": "Square"
+            }
+        ]
+    },
+    {
+        "label": "Beliebte Filme",
+        "path": "plugin://plugin.video.themoviedb.helper/?info=popular&tmdb_type=movie",
+        "icon": "special://skin/extras/icons/film.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-488ad32f",
+        "guid": "guid-1b97c171",
+        "submenulist_label": "Filme",
+        "submenulist_path": "plugin://plugin.video.themoviedb.helper/?info=dir_movie",
+        "submenulist_icon": "special://skin/extras/icons/film.png",
+        "submenulist_target": "videos",
+        "use_as_widget": "True",
+        "widget_style": "Poster"
+    },
+    {
+        "label": "Film-Genres",
+        "path": "plugin://plugin.video.themoviedb.helper/?info=genres&tmdb_type=movie",
+        "icon": "special://skin/extras/icons/genre.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-488ad32f",
+        "guid": "guid-23c15b76",
+        "submenulist_label": "Genres",
+        "submenulist_path": "plugin://plugin.video.themoviedb.helper/?info=genres&tmdb_type=movie",
+        "submenulist_icon": "special://skin/extras/icons/genre.png",
+        "submenulist_target": "videos",
+        "use_as_widget": "True"
+    },
+    {
+        "label": "Streaming-Anbieter (Filme)",
+        "path": "plugin://plugin.video.themoviedb.helper/?info=watch_providers&tmdb_type=movie",
+        "icon": "special://skin/extras/icons/director.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-488ad32f",
+        "guid": "guid-7e902181",
+        "submenulist_label": "Anbieter",
+        "submenulist_path": "plugin://plugin.video.themoviedb.helper/?info=watch_providers&tmdb_type=movie",
+        "submenulist_icon": "special://skin/extras/icons/director.png",
+        "submenulist_target": "videos",
+        "use_as_widget": "True"
+    },
+    {
+        "label": "Beliebte Serien",
+        "path": "plugin://plugin.video.themoviedb.helper/?info=popular&tmdb_type=tv",
+        "icon": "special://skin/extras/icons/tv.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-0a9df9a5",
+        "guid": "guid-087e1cb2",
+        "submenulist_label": "Serien",
+        "submenulist_path": "plugin://plugin.video.themoviedb.helper/?info=dir_tv",
+        "submenulist_icon": "special://skin/extras/icons/tv.png",
+        "submenulist_target": "videos",
+        "use_as_widget": "True",
+        "widget_style": "Poster"
+    },
+    {
+        "label": "Serien-Genres",
+        "path": "plugin://plugin.video.themoviedb.helper/?info=genres&tmdb_type=tv",
+        "icon": "special://skin/extras/icons/genre.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-0a9df9a5",
+        "guid": "guid-6cbbd6aa",
+        "submenulist_label": "Genres",
+        "submenulist_path": "plugin://plugin.video.themoviedb.helper/?info=genres&tmdb_type=tv",
+        "submenulist_icon": "special://skin/extras/icons/genre.png",
+        "submenulist_target": "videos",
+        "use_as_widget": "True"
+    },
+    {
+        "label": "Streaming-Anbieter (Serien)",
+        "path": "plugin://plugin.video.themoviedb.helper/?info=watch_providers&tmdb_type=tv",
+        "icon": "special://skin/extras/icons/director.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-0a9df9a5",
+        "guid": "guid-5ee447c2",
+        "submenulist_label": "Anbieter",
+        "submenulist_path": "plugin://plugin.video.themoviedb.helper/?info=watch_providers&tmdb_type=tv",
+        "submenulist_icon": "special://skin/extras/icons/director.png",
+        "submenulist_target": "videos",
+        "use_as_widget": "True"
+    },
+    {
+        "label": "VAVOO Live-TV",
+        "path": "plugin://plugin.video.vavooto/?action=live",
+        "icon": "special://skin/extras/icons/livetv.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-e79824eb",
+        "guid": "guid-007f07ec",
+        "use_as_widget": "True",
+        "submenulist_label": "Live-TV Gruppen",
+        "submenulist_path": "plugin://plugin.video.vavooto/?action=group_tv&type=vavoo",
+        "submenulist_icon": "DefaultAddonPVRClient.png",
+        "submenulist_target": "videos"
+    },
+    {
+        "label": "YouTube & SmartTube",
+        "path": "StartAndroidActivity(org.smarttube.stable)",
+        "icon": "special://skin/extras/icons/video.png",
+        "target": "videos",
+        "sidemenu_guid": "guid-smarttube-01",
+        "guid": "guid-homemenu-yt",
+        "submenulist_label": "YouTube",
+        "submenulist_path": "plugin://plugin.video.youtube/",
+        "submenulist_icon": "special://skin/extras/icons/video.png",
+        "submenulist_target": "videos",
+        "widgets": [
+            {
+                "label": "⭐ Meine YouTube Vorschläge (Startseite)",
+                "path": "plugin://plugin.video.youtube/special/recommendations/",
+                "icon": "special://skin/extras/icons/video.png",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "🔔 Meine Abonnements",
+                "path": "plugin://plugin.video.youtube/special/my_subscriptions/",
+                "icon": "special://skin/extras/icons/video.png",
+                "target": "videos",
+                "widget_style": "Landscape"
+            },
+            {
+                "label": "🔥 YouTube Trends",
+                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
+                "icon": "special://skin/extras/icons/video.png",
+                "target": "videos",
+                "widget_style": "Landscape"
+            }
+        ],
+        "submenu": [
+            {
+                "label": "🚀 SmartTube App starten",
+                "icon": "special://skin/extras/icons/video.png",
+                "path": "StartAndroidActivity(org.smarttube.stable)",
+                "target": "videos"
+            },
+            {
+                "label": "YouTube Add-on öffnen",
+                "icon": "special://skin/extras/icons/video.png",
+                "path": "ActivateWindow(videos, plugin://plugin.video.youtube/, return)",
+                "target": "videos"
+            },
+            {
+                "label": "🔑 YouTube Konto verbinden (Sign-In)",
+                "icon": "special://skin/extras/icons/video.png",
+                "path": "RunPlugin(plugin://plugin.video.youtube/sign/in/)",
+                "target": "videos"
+            }
+        ]
+    }
+]

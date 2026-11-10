@@ -1,0 +1,196 @@
+[
+    {
+        "label": "Entdecken",
+        "icon": "special://skin/extras/icons/binoculars.png",
+        "path": "ActivateWindow(1105)",
+        "target": "",
+        "widgets": [
+            {
+                "label": "▶️ Weiterschauen",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_inprogress&widget=true",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-inprogress-01"
+            },
+            {
+                "label": "📺 Nächste Episoden",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_nextepisodes&tmdb_type=tv&widget=true",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-ondeck-01"
+            },
+            {
+                "label": "⭐ Meine YouTube Vorschläge",
+                "path": "plugin://plugin.video.youtube/special/recommendations/",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-yt-side-rec"
+            },
+            {
+                "label": "🔥 YouTube Trends",
+                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-yt-side-trends"
+            },
+            {
+                "label": "🔥 Filme im Trend",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-f5d496d2"
+            },
+            {
+                "label": "📺 Serien im Trend",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=tv&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-64e9b01c"
+            }
+        ],
+        "guid": "guid-19ada9cd"
+    },
+    {
+        "label": "$LOCALIZE[20342]",
+        "icon": "special://skin/extras/icons/film.png",
+        "path": "ActivateWindow(videos,plugin://plugin.video.themoviedb.helper/?info=dir_movie,return)",
+        "target": "",
+        "widgets": [
+            {
+                "label": "🔥 Filme im Trend",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-5914ec8b"
+            },
+            {
+                "label": "🍿 Aktuell im Kino",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=now_playing&tmdb_type=movie&widget=true",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-8700db05"
+            },
+            {
+                "label": "⭐ Beliebte Filme",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=popular&tmdb_type=movie&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-669d551c"
+            },
+            {
+                "label": "🏆 Bestbewertete Filme",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=top_rated&tmdb_type=movie&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-c4fdb8e7"
+            }
+        ],
+        "guid": "guid-488ad32f",
+        "spotlight_label": "Filme im Trend",
+        "spotlight_path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie&widget=true",
+        "spotlight_icon": "special://skin/extras/icons/film.png",
+        "spotlight_target": "videos"
+    },
+    {
+        "label": "$LOCALIZE[20343]",
+        "icon": "special://skin/extras/icons/tv.png",
+        "path": "ActivateWindow(videos,plugin://plugin.video.themoviedb.helper/?info=dir_tv,return)",
+        "target": "",
+        "widgets": [
+            {
+                "label": "🔥 Serien im Trend",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=tv&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-dd2d29ef"
+            },
+            {
+                "label": "📡 Neue Folgen (Heute)",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=airing_today&tmdb_type=tv&widget=true",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-1aae7d6c"
+            },
+            {
+                "label": "⭐ Beliebte Serien",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=popular&tmdb_type=tv&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-c421fc46"
+            },
+            {
+                "label": "🏆 Bestbewertete Serien",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=top_rated&tmdb_type=tv&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-db154daf"
+            }
+        ],
+        "guid": "guid-0a9df9a5",
+        "spotlight_label": "Serien im Trend",
+        "spotlight_path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=tv&widget=true",
+        "spotlight_icon": "DefaultTVShows.png",
+        "spotlight_target": "videos"
+    },
+    {
+        "label": "$LOCALIZE[31085]",
+        "icon": "special://skin/extras/icons/livetv.png",
+        "path": "ActivateWindow(videos,plugin://plugin.video.vavooto/?action=live,return)",
+        "target": "",
+        "widgets": [
+            {
+                "label": "📡 VAVOO Live-TV Gruppen",
+                "path": "plugin://plugin.video.vavooto/?action=group_tv&type=vavoo",
+                "widget_style": "Square",
+                "target": "videos",
+                "guid": "guid-27538532"
+            },
+            {
+                "label": "🇩🇪 Deutsche Live-TV Sender",
+                "path": "plugin://plugin.video.vavooto/?action=channels&type=vavoo&group=Germany",
+                "widget_style": "Square",
+                "target": "videos",
+                "guid": "guid-1db27e6d"
+            }
+        ],
+        "guid": "guid-e79824eb",
+        "spotlight_label": "Live-TV",
+        "spotlight_path": "plugin://plugin.video.vavooto/?action=group_tv&type=vavoo",
+        "spotlight_icon": "DefaultAddonPVRClient.png",
+        "spotlight_target": "videos"
+    },
+    {
+        "label": "YouTube & SmartTube",
+        "icon": "special://skin/extras/icons/video.png",
+        "path": "StartAndroidActivity(org.smarttube.stable)",
+        "target": "",
+        "widgets": [
+            {
+                "label": "⭐ Meine YouTube Vorschläge (Startseite)",
+                "path": "plugin://plugin.video.youtube/special/recommendations/",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-yt-side-rec-main"
+            },
+            {
+                "label": "🔔 Meine Abonnements",
+                "path": "plugin://plugin.video.youtube/special/my_subscriptions/",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-yt-side-subs"
+            },
+            {
+                "label": "🔥 YouTube Trends",
+                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
+                "widget_style": "Landscape",
+                "target": "videos",
+                "guid": "guid-yt-side-pop"
+            }
+        ],
+        "guid": "guid-smarttube-01",
+        "spotlight_label": "YouTube Vorschläge",
+        "spotlight_path": "plugin://plugin.video.youtube/special/popular_right_now/",
+        "spotlight_icon": "special://skin/extras/icons/video.png",
+        "spotlight_target": "videos"
+    }
+]

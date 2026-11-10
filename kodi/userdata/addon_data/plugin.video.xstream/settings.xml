@@ -1,0 +1,120 @@
+<settings version="2">
+    <setting id="vavooTvEnabled" default="true">true</setting>
+    <setting id="plugin_animetoast" default="true">true</setting>
+    <setting id="global_search_animetoast" default="true">true</setting>
+    <setting id="plugin_animetoast_checkDomain" default="true">true</setting>
+    <setting id="plugin_animetoast.domain">www.animetoast.cc</setting>
+    <setting id="plugin_animetoast_status">200</setting>
+    <setting id="plugin_aniworld" default="true">true</setting>
+    <setting id="global_search_aniworld" default="true">true</setting>
+    <setting id="plugin_aniworld_checkDomain" default="true">true</setting>
+    <setting id="plugin_aniworld.domain">aniworld.to</setting>
+    <setting id="plugin_aniworld_status">200</setting>
+    <setting id="plugin_api_sites" default="true">true</setting>
+    <setting id="global_search_api_sites">false</setting>
+    <setting id="plugin_api_sites_checkDomain" default="true">true</setting>
+    <setting id="plugin_api_sites.domain" default="true" />
+    <setting id="plugin_api_sites_status">404</setting>
+    <setting id="plugin_burningseries" default="true">false</setting>
+    <setting id="global_search_burningseries" default="true">false</setting>
+    <setting id="plugin_burningseries_checkDomain">false</setting>
+    <setting id="plugin_burningseries.domain" default="true" />
+    <setting id="plugin_burningseries_status" default="true">true</setting>
+    <setting id="plugin_einschalten" default="true">true</setting>
+    <setting id="global_search_einschalten" default="true">true</setting>
+    <setting id="plugin_einschalten_checkDomain" default="true">true</setting>
+    <setting id="plugin_einschalten.domain">einschalten.in</setting>
+    <setting id="plugin_einschalten_status">200</setting>
+    <setting id="plugin_filmo" default="true">true</setting>
+    <setting id="global_search_filmo" default="true">true</setting>
+    <setting id="plugin_filmo_checkDomain" default="true">true</setting>
+    <setting id="plugin_filmo.domain">filmo.to</setting>
+    <setting id="plugin_filmo_status">200</setting>
+    <setting id="plugin_filmpalast" default="true">true</setting>
+    <setting id="global_search_filmpalast" default="true">true</setting>
+    <setting id="plugin_filmpalast_checkDomain" default="true">true</setting>
+    <setting id="plugin_filmpalast.domain">filmpalast.to</setting>
+    <setting id="plugin_filmpalast_status">200</setting>
+    <setting id="plugin_hdfilme" default="true">true</setting>
+    <setting id="global_search_hdfilme" default="true">true</setting>
+    <setting id="plugin_hdfilme_checkDomain" default="true">true</setting>
+    <setting id="plugin_hdfilme.domain">hd-filme.skin</setting>
+    <setting id="plugin_hdfilme_status">200</setting>
+    <setting id="plugin_internetarchive" default="true">true</setting>
+    <setting id="global_search_internetarchive" default="true">false</setting>
+    <setting id="plugin_internetarchive_status" default="true">true</setting>
+    <setting id="plugin_kellerkino" default="true">true</setting>
+    <setting id="global_search_kellerkino" default="true">true</setting>
+    <setting id="plugin_kellerkino_checkDomain" default="true">true</setting>
+    <setting id="plugin_kellerkino.domain">www.kellerkino.com</setting>
+    <setting id="plugin_kellerkino_status">200</setting>
+    <setting id="plugin_kinoger" default="true">true</setting>
+    <setting id="global_search_kinoger" default="true">true</setting>
+    <setting id="plugin_kinoger_checkDomain" default="true">true</setting>
+    <setting id="plugin_kinoger.domain">kinoger.com</setting>
+    <setting id="plugin_kinoger_status">200</setting>
+    <setting id="plugin_megakino" default="true">true</setting>
+    <setting id="global_search_megakino" default="true">true</setting>
+    <setting id="plugin_megakino_checkDomain" default="true">true</setting>
+    <setting id="plugin_megakino.domain">megakino27.com</setting>
+    <setting id="plugin_megakino_status">200</setting>
+    <setting id="plugin_moflix-stream" default="true">true</setting>
+    <setting id="global_search_moflix-stream" default="true">true</setting>
+    <setting id="plugin_moflix-stream_checkDomain" default="true">true</setting>
+    <setting id="plugin_moflix-stream.domain">moflix-stream.xyz</setting>
+    <setting id="plugin_moflix-stream_status">200</setting>
+    <setting id="plugin_movie2k" default="true">true</setting>
+    <setting id="global_search_movie2k" default="true">true</setting>
+    <setting id="plugin_movie2k_checkDomain" default="true">true</setting>
+    <setting id="plugin_movie2k.domain">movie2k.cx</setting>
+    <setting id="plugin_movie2k_status">200</setting>
+    <setting id="plugin_netzkino" default="true">true</setting>
+    <setting id="global_search_netzkino" default="true">true</setting>
+    <setting id="plugin_netzkino_checkDomain" default="true">true</setting>
+    <setting id="plugin_netzkino.domain">www.netzkino.de</setting>
+    <setting id="plugin_netzkino_status">200</setting>
+    <setting id="plugin_serienstream" default="true">true</setting>
+    <setting id="global_search_serienstream" default="true">true</setting>
+    <setting id="plugin_serienstream_checkDomain" default="true">true</setting>
+    <setting id="plugin_serienstream.domain">serienstream.to</setting>
+    <setting id="plugin_serienstream_status">200</setting>
+    <setting id="plugin_streamcloud" default="true">true</setting>
+    <setting id="global_search_streamcloud" default="true">true</setting>
+    <setting id="plugin_streamcloud_checkDomain" default="true">true</setting>
+    <setting id="plugin_streamcloud.domain">streamcloud.date</setting>
+    <setting id="plugin_streamcloud_status">200</setting>
+    <setting id="prefLanguage" default="true">0</setting>
+    <setting id="hosterSelect" default="true">Dialog</setting>
+    <setting id="maxHoster" default="true">100</setting>
+    <setting id="blockedHoster" default="true" />
+    <setting id="bypassDNSlock" default="true">true</setting>
+    <setting id="requestTimeout" default="true">10</setting>
+    <setting id="volatileHtmlCache" default="true">true</setting>
+    <setting id="cacheTime" default="true">12</setting>
+    <setting id="cacheDeltaDay" default="true">3</setting>
+    <setting id="TMDBMETA" default="true">false</setting>
+    <setting id="metaOverwrite" default="true">true</setting>
+    <setting id="advanced" default="true">false</setting>
+    <setting id="tmdb_lang" default="true">de</setting>
+    <setting id="poster_tmdb" default="true">w342</setting>
+    <setting id="backdrop_tmdb" default="true">w1280</setting>
+    <setting id="Color" default="true">lightblue</setting>
+    <setting id="tmdb_user_api_key" default="true" />
+    <setting id="captcha.enabled" default="true">true</setting>
+    <setting id="2captcha.pass" default="true" />
+    <setting id="captcha.timeout" default="true">120</setting>
+    <setting id="aniworld.user" default="true" />
+    <setting id="aniworld.pass" default="true" />
+    <setting id="serienstream.user" default="true" />
+    <setting id="serienstream.pass" default="true" />
+    <setting id="githubUpdateResolver" default="true">true</setting>
+    <setting id="resolver.branch" default="true">release</setting>
+    <setting id="auto-view" default="true">false</setting>
+    <setting id="files-view" default="true">55</setting>
+    <setting id="movies-view" default="true">503</setting>
+    <setting id="tvshows-view" default="true">503</setting>
+    <setting id="seasons-view" default="true">504</setting>
+    <setting id="episodes-view" default="true">504</setting>
+    <setting id="lastdelhtml" default="true">1794218790</setting>
+    <setting id="plugin.video.xstream_main">finished</setting>
+</settings>

@@ -1,0 +1,21 @@
+# Caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.cache/
+
+# Kodi temporary files
+*.log
+*.log.old
+*.db-wal
+*.db-shm
+*.cookie
+cookies/
+temp/
+packages/
+backups/
+
+# System
+.DS_Store
+Thumbs.db

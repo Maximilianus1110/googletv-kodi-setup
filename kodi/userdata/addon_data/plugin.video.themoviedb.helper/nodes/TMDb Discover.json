@@ -1,0 +1,16 @@
+{
+  "name": "TMDb Discover",
+  "icon": "",
+  "list": [
+    {
+      "name": "Typ Serien",
+      "icon": "/storage/emulated/0/Android/data/org.xbmc.kodi/files/.kodi/addons/plugin.video.themoviedb.helper//resources/icons/themoviedb/discover.png",
+      "path": "plugin://plugin.video.themoviedb.helper/?info=discover&with_id=True&tmdb_type=tv"
+    },
+    {
+      "name": "Typ Filme",
+      "icon": "/storage/emulated/0/Android/data/org.xbmc.kodi/files/.kodi/addons/plugin.video.themoviedb.helper//resources/icons/themoviedb/discover.png",
+      "path": "plugin://plugin.video.themoviedb.helper/?info=discover&with_id=True&tmdb_type=movie"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+    <include file="script-skinvariables-generator-textures-includes-kodiprofile-8c34d337b002490eda7727171fcb9dbf.xml" condition="String.IsEqual(System.ProfileName,&quot;Master user&quot;)"/>
+</includes>

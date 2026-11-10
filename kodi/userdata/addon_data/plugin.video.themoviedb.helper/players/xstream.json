@@ -1,0 +1,13 @@
+{
+    "name": "xStream Scraper (Auto-Play + Vavoo)",
+    "plugin": "script.module.xstreamscraper",
+    "priority": 10,
+    "is_resolvable": "true",
+    "assert": {
+        "play_movie": ["tmdb"],
+        "play_episode": ["tmdb", "season", "episode"]
+    },
+    "play_movie": "plugin://script.module.xstreamscraper/?id={tmdb}",
+    "play_episode": "plugin://script.module.xstreamscraper/?id={tmdb}&season={season}&episode={episode}",
+    "make_playlist": "true"
+}

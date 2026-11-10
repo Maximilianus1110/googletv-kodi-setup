@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.adulthideout" name="AdultHideout" version="1.0.27" provider-name="Vashiel">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0"/>
+        <import addon="script.module.requests" version="2.25.1"/>
+        <import addon="service.adulthideout.core" version="1.0.1"/>
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="default.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.service" library="resources/lib/view_service.py" start="startup"/>
+    <extension point="xbmc.addon.metadata">
+        <settingfile>resources/settings.xml</settingfile>
+        <news>
+v. 1.0.27 "Quicksilver" - 2026-11-09
+- Native Core Search: Global Search and Mega Shuffle run natively in AdultHideout Core, all 300+ sources in a single pass. 20% more results in 25% less time.
+- Smarter &amp; Cleaner Results: Site APIs, feeds and search forms understood; ads, category and tag pages filtered out.
+- Streamlined Network Layer: Core search more than twice as fast.
+- Fresh Core for all seven platforms.
+- 27 Websites Refreshed: including Aki-H, Hanime, HentaiMama, HentaiCity, LeakGallery, MixPorn, PornZog, StreamPorn, SunPorno, ThisVid and WOW.xxx.
+
+v. 1.0.26 "Core Horizon" - 2026-11-03
+- AdultHideout Core (Public Architecture Preview): New native engine for search, stream relaying and script evaluation. Falls back automatically to the classic Python engine if Core is not installed or unsupported.
+- On-Demand Core Installer: Downloads only the ~3 MB binary for your device on first use and starts it without restarting Kodi.
+- Global Search &amp; Mega Shuffle: All 302 sources searched concurrently, about 56 s on a phone and 12-18 s on desktop.
+- Playback &amp; Network: Local HLS and byte-range relay for reliable seeking and 1080p selection, encrypted DNS fallback.
+- Website Catalog: Re-enabled nine previously hidden websites (CrazyShit stays optional), removed OGPorn, One43Porn and VintageHuyamba.
+- Website Repairs: 37 websites and the DoodStream, LuLuStream and StreamTape resolvers repaired. Added Porner.tv.
+- Localization: English, German, French, Spanish and Italian updated.
+</news>
+        <summary>[COLOR red]XXX[/COLOR] Porn videos</summary>
+        <description>
+Internet [COLOR red]XXX Porn Video[COLOR white] Streams.
+
+[COLOR red][B]WARNING:[/B][COLOR red]Only for adults[/COLOR]    
+
+[COLOR white]AdultHideout does not host third-party videos on its own servers and is not affiliated with the websites supported by the addon.
+Content, streams and metadata are provided by third-party websites.[/COLOR]
+
+[COLOR white]Github:
+https://github.com/Vashiel/repository.adulthideout
+[/COLOR]    
+        </description>
+        <disclaimer>AdultHideout does not host third-party videos on its own servers and is not affiliated with the websites supported by the addon. Content, streams and metadata are provided by third-party websites.</disclaimer>    
+        <platform>all</platform>
+        <license>http://www.gnu.org/licenses/</license>
+        <forum></forum>
+        <website>https://github.com/Vashiel/repository.adulthideout/wiki</website>
+        <email></email>
+        <mainsource>https://github.com/Vashiel/repository.adulthideout</mainsource>    
+        <source></source>         
+        <assets>
+            <icon>resources/logos/icon.png</icon>
+            <fanart>resources/logos/fanart.jpg</fanart>
+        </assets>
+    </extension>
+</addon>

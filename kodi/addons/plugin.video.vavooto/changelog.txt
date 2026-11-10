@@ -1,0 +1,171 @@
+2026.10.29.1
+- Live-TV: Unter "Gruppen" gibt es jetzt den Punkt "LITETV - ALLE SENDER" (ohne Untergruppen).
+
+2026.10.29
+- Fix: Python-Pakete in resources/lib (httpx, httpcore, h11, h2, hpack, hyperframe) fuer Python 3.8 (Kodi) neu gebaut; behebt "TypeError: type object is not subscriptable" beim Proxy (Issue #110).
+
+2026.09.08.1
+- Live-TV: MPEG-TS-Quellen ohne verwertbare AAC/MP2/MP3/AC3/E-AC3-Audiodaten werden schon beim Streamtest aussortiert und durch die naechste Quelle ersetzt.
+
+2026.09.08
+- Live-TV: Anzeige der Stream-Herkunft (STALKER/VAVOO/2ix2) im Titel (z.B. "VOX (1/12 VAVOO)"), im Plot sowie bei manueller Quellenauswahl und im Auto-Retry-Dialog.
+
+2026.09.04.1
+- Stalker-MPEG-TS wird ueber einen lokalen HLS-Reconnect-Proxy wiedergegeben. Nach einem Upstream-EOF wird der Sender neu aufgeloest, der ueberlappende TS-Bereich anhand der Video-PTS uebersprungen und der Uebergang mit #EXT-X-DISCONTINUITY markiert.
+
+2026.09.04
+- Stalker-/MPEG-TS-Livestreams werden als video/mp2t ohne HLS-Manifest- und Timeshift-Eigenschaften geöffnet; HLS-Quellen behalten die bisherige HLS-/Timeshift-Konfiguration.
+
+2026.09.01.1
+- VAVOO Senderliste: Host von www2.vavoo.to auf vavoo.to umgestellt - www2 lehnt seit dem 01.09. den TLS-Handshake ab (tlsv1 alert internal error), dadurch war die komplette VAVOO-Senderliste tot. Endpoint /live2/index?output=json ist auf vavoo.to identisch.
+
+2026.08.31.1
+- Quellen-Vorrang: sechste Option "Stalker > LiteTV > VAVOO" ergaenzt (die Reihenfolge war im Code schon vorhanden, aber in den Einstellungen nicht auswaehlbar).
+
+2026.08.31
+- seasons(): bei nur einer Staffel wird jetzt direkt zu den Episoden gesprungen (return) - vorher doppeltes endOfDirectory + zusaetzlicher "Staffel 1"-Ordner mit veraltetem e=-Parameter.
+- LiteTV 2ix2: die drei Laenderkategorien werden jetzt tatsaechlich parallel geladen (ThreadPoolExecutor wurde bisher angelegt, aber nicht genutzt).
+- Stalker make_request_with_retries: Backoff greift jetzt wirklich (war praktisch unerreichbar); Netzfehler warten vor dem naechsten Versuch statt sofort erneut zu senden; "Portal antwortet ohne js" = MAC defekt bricht sofort ab statt sinnlos zu wiederholen.
+- getAuthSignature: hartes Gesamt-Zeitbudget von 25s ueber alle Versuche/Profile - bei totem Netz kein minutenlanger Haenger mehr.
+- Auto-Cache-Bereinigung laeuft nur noch max. 1x/10min statt bei jedem Plugin-Aufruf (inkl. jedem Failover-Hop).
+- Katalogansicht: max. 10 parallele TMDB-Threads statt einer pro Listeneintrag.
+- log(): grosse Strukturen werden bei ausgeschaltetem Debug nicht mehr serialisiert (json.dumps lief bisher auch fuer reine LOGDEBUG-Zeilen).
+
+2026.08.30.10
+- Stalker: wenn Portal-Login ok aber Streams/Senderliste nicht liefern, wird jetzt WEITER mit der naechsten MAC geprueft (bis 30 bei manueller Portal-Auswahl, 10 im Hintergrund) statt sofort abzubrechen.
+- Keine MAC wird mehr faelschlich blacklistet, wenn Login funktioniert (Stream-456 / leere Senderliste = Portal-/Geo-/IP-Problem, nicht die MAC).
+- check_portal komplett auf Batch-Schleife umgebaut: mehrere Prefilter-Runden bis eine echte MAC gefunden ist oder das Budget erschoepft.
+- Aussagekraeftige Statusmeldung: 'Login ok - kein Stream abspielbar' bzw. 'Portal liefert keine Senderliste (ueberlastet?)'.
+- Abgelaufen-Puffer 5 Tage -> 12h; Prefilter 2 Threads / Batch <=24.
+
+2026.08.30.9
+- Stalker end-to-end getestet (echte Portale): MAC-Prefilter -> check() -> Genres -> 12122 Sender -> 5/5 Streams abspielbar, 0 MACs faelschlich blacklistet.
+- check() gibt neu "No Stream" zurueck, wenn Login+Senderliste+Gruppen ok sind aber kein Test-Stream laeuft (Geo-/CDN-Sperre) - die MAC wird NICHT verbrannt, Volltest stoppt sofort.
+- check() prueft bis zu 5 zufaellige Sender statt nur einen (kein Fehlurteil durch einen toten Kanal).
+- check() prueft Konto/Ablauf VOR der teuren Senderliste; Reihenfolge account -> channels -> genres -> stream.
+- Abgelaufene MACs werden im Volltest nicht mehr durchprobiert (Ablauf-Puffer 5 Tage -> 12 h).
+- Prefilter schonender: max. 2 parallele Handshakes, Batch <= 24 (vorher bis 40 -> IP-Ban-Risiko).
+
+2026.08.30.8
+- Anzeige-Bug: Titel "(x/n)" und Plot "Stream x von n" widersprachen sich, wenn die erste Quelle beim Aufloesen uebersprungen wurde. Beide werden jetzt nach der Aufloesung gesetzt und zeigen dieselbe (tatsaechlich verwendete) Quelle.
+
+2026.08.30.7
+- Proxy-Playlist blockiert den Request-Pfad nicht mehr: ffmpeg bekommt die Playlist immer sofort aus dem Cache, der Hintergrund-Thread erledigt Refresh/Re-Resolve. (Vorher konnte ffmpeg im synchronen Re-Resolve haengen -> I/O-Timeout -> Endlosschleife auf dasselbe Segment.)
+- Proxy erkennt eingefrorene Playlists (MEDIA-SEQUENCE steht > 3x Segmentlaenge trotz HTTP 200 = still gestorbener Token) und loest dieselbe Quelle neu auf.
+- Re-Resolve auf 1x pro 12s gedrosselt (kein Dauer-Hammern bei toter Quelle).
+- Session-Start primt Playlist sofort (erste ffmpeg-Anfrage wartet nicht).
+
+2026.08.30.6
+- Proxy: Test mit den exakt in Kodi haengenden Quellen zeigt - Segmente kommen byte-identisch und TS-sauber an, Quellen leben. Ursache war der ffmpeg-I/O-Timeout bei langsamem Erst-/Miss-Segment.
+- Prefetch laedt jetzt das GANZE sichtbare Playlist-Fenster vor (nicht nur die letzten 4) - das Segment das ffmpeg zuerst anfordert ist damit schon da. RAM-Budget 24 -> 48 MB.
+- Cache-Miss wird waehrend des Downloads an ffmpeg durchgestreamt (kein ~9s-Blackout mehr) und parallel gecacht.
+- httpx read-Timeout 10s -> 20s, ffmpeg I/O-Timeout 10s -> 30s (grosse 10-MB/20s-Segmente).
+
+2026.08.30.5
+- Failover bei haengendem Stream gefixt: wenn der Player abbricht OHNE je ein Bild geliefert zu haben (haeufig bei Pay-TV wie 13TH STREET), wird das jetzt als Fehlstart gewertet und die naechste Quelle genommen - vorher wurde das als "vom Nutzer gestoppt" interpretiert und blieb stehen.
+- Fehlstart-Erkennung von 30s auf 12s verkuerzt, Stillstand weiter 8s; Monitor-Takt 2s -> 1s (schnellerer Wechsel).
+
+2026.08.30.4
+- HLS-Proxy: robust gegen Netzausfälle - keine seitenlangen Tracebacks mehr, kein Absturz; HTTP-Client-Timeouts verkürzt (5s connect / 10s read), Prefetch-Loop mit Backoff bei Upstream-Ausfall.
+- Proxy: send_error/BrokenPipe beim Client-Abbruch abgefangen, socketserver-Fehler (Connection reset) werden geschluckt.
+- Live-TV: getchannels()-Aufruf in livePlay abgesichert - ein Netz-Blip während eines Auto-Retry crasht das Plugin nicht mehr.
+- Stalker MAC-Test komplett überarbeitet: paralleler Handshake-Schnelltest (statt sequentiell), Netzwerkfehler markieren eine MAC NICHT mehr als defekt, faultymac-Blacklist mit 12h-TTL, konsistenter Cache-Key.
+- VAVOO-Kanalliste: Frische-Prüfung (vavoo_groups) abgesichert - bei Netzfehler wird der vorhandene Cache weiterverwendet statt zu scheitern.
+
+2026.08.30.3
+- VAVOO Proxy mit Vorauslade-Puffer: ein Hintergrund-Thread lädt die kommenden Segmente vorab in einen RAM-Cache (Budget 40 MB), kurze Upstream-Aussetzer führen nicht mehr zum Stottern. Abschaltbar über neue Einstellung "Segmente vorausladen".
+- Proxy spricht jetzt HTTP/1.1 mit Keep-Alive, beantwortet HEAD- und Range-Anfragen und streamt Segmente durch statt sie komplett zu puffern.
+- Live-TV nutzt fest inputstream.ffmpegdirect; die Auswahl "HLS Inputstream Addon" (ffmpeg/adaptive) wurde entfernt.
+- Einstellung "Wartezeit bis zur Neuverbindung" entfernt; Stillstandserkennung fest auf 8 s (der Proxy-Puffer überbrückt kurze Aussetzer).
+- Funktion "m3u erstellen" samt Kontextmenü-Eintrag und Einstellung entfernt.
+
+2026.08.30.2
+- Live-TV Auto-Failover: bei Streamabbruch wird ohne Dialog automatisch die nächste Quelle gewählt (auch im Countdown-/Manuell-Modus).
+- Lokaler HLS-Proxy bleibt jetzt für die gesamte Wiedergabe aktiv, nicht nur beim ersten Versuch (Proxy starb bisher beim Umschalten).
+- Failover greift jetzt auch bei fehlgeschlagenem Wiedergabestart (startup_failed) und bei stillem Wegbrechen der Wiedergabe.
+- Neuverbindungsversuche standardmäßig auf 3 erhöht bzw. mindestens Anzahl der verfügbaren Quellen.
+- VAVOO-Proxy löst abgelaufene/tote Stream-URLs im Hintergrund neu auf und bedient dieselbe lokale URL weiter.
+
+2026.08.30.1
+- Certifi und IDNA durch offizielle Kodi-Modulabhängigkeiten ersetzt.
+
+2026.08.30
+- Mitgelieferte Python-Bibliotheken um ungenutzte Async-, CLI-, Test- und Typing-Dateien bereinigt.
+
+2026.08.29.12
+- Fehler beim Laden der Kanalliste behoben (Absicherung der Stalker/VAVOO/LiteTV Rückgabewerte).
+
+2026.08.29.11
+- Integrierter lokaler HLS Proxy für VAVOO Live-Streams zur Stabilisierung von Transport und Segment-Pufferung.
+
+2026.08.29.10
+- LiteTV Ländergruppen-Menü und Auswahl entfernt; alle LiteTV-Sender (inkl. SRF und Servus TV) werden nahtlos in einer Liste bereitgestellt.
+
+2026.08.29.9
+- Integrierter nativer HTTP/2 Proxy & FooBarX Decoder für Nydus Live-HD-Streams (VOX, RTL, SAT.1, ProSieben etc.).
+- Vollständige Autonomie ohne externe System-Tools (reine Python HTTP/2-Engine).
+
+2026.08.29.8
+- Vollständige Bereinigung und lokale Validierung der LiteTV-Sender & Streams.
+- Korrigierte M3U8-Segment-Validierung bei verschachtelten Master-Playlists.
+
+2026.08.29.7
+- Priorisierung der Nydus HD-Streams (1024x576/720p) vor den SD-Hopslan-Streams für optimale Bildqualität.
+- Automatisches Leeren veralteter LiteTV-Cacheeinträge.
+
+2026.08.29.6
+- Integrierter Nydus HD Stream-Proxy & FooBarX TS-Decoder für verschlüsselte Live-HD-Streams (VOX, RTL, SAT.1, SRF etc.).
+- Robustes Segment-Handling und direkter Playback-Support in Kodi.
+
+2026.08.29.5
+- LiteTV (2ix2 und Nydus) als zusätzliche Live-TV-Quelle für DE, AT und CH integriert.
+- Eigener Menüpunkt „LITETV - GRUPPEN“ in Live-Gruppen und Integration in Live-Alle.
+- Einstellbare Quellen-Priorität (Vorrang zwischen VAVOO, Stalker und LiteTV) in den TV-Settings hinzugefügt.
+- Eigene Einstellungen für LiteTV mit Ein-/Ausschalten, Ländergruppen-Auswahl und Cache-Verwaltung.
+
+2026.08.29.4
+- M3U8-Streams werden vor der Wiedergabe inklusive Unter-Playlist und Mediensegment geprüft.
+- Bei einem erkannten Streamstillstand wird beim nächsten Versuch die nächste Quelle verwendet.
+
+2026.08.29.3
+- Automatische Neuverbindung verwendet beim Resolven weiterhin denselben Stream.
+- Die Anzahl der Neuverbindungsversuche ist in den TV-Einstellungen konfigurierbar.
+
+2026.08.29.2
+- Live-TV-Sender werden nach einem erkannten Streamabbruch einmal neu aufgelöst und gestartet.
+- Die Wartezeit bis zur Neuverbindung ist in den TV-Einstellungen konfigurierbar (Standard: 10 Sekunden).
+
+2026.08.29.1
+- Ein Android-App-Profil dient als Signatur-Backup, wenn das Desktop-Profil keine gültige Signatur liefert.
+
+2026.08.29
+- Nach dem Kanalfilter leere Namen und Namen, die nur aus ] oder ) bestehen, werden aussortiert.
+
+2026.08.28
+- VAVOO-Gruppen werden wieder über den live2-Index ermittelt.
+- Alle VAVOO-Gruppen werden parallel und vollständig paginiert mit einer gemeinsamen Signatur geladen.
+- MediaHubMX-Signaturen werden auf app.ok und validUntil geprüft und bis kurz vor Ablauf wiederverwendet.
+
+2026.08.24
+- Österreichische, deutsche und Schweizer Stalker-Gruppen werden vorausgewählt; die manuelle Auswahl bleibt möglich.
+- VAVOO-Live-TV auf die aktuelle MediaHubMX-Katalog- und Resolve-API umgestellt.
+- Gruppen werden direkt aus den Katalogfiltern geladen und Sender über nextCursor vollständig paginiert.
+- Nicht mehr benötigten Signaturversuch über cache.vypn.net entfernt.
+
+2026.08.17
+- Fehlgeschlagene Stalker-Portalaufrufe werden einmalig mit einem Chrome-User-Agent wiederholt.
+- Nach erfolgreichem Fallback wird der Chrome-User-Agent für weitere Portalaufrufe beibehalten.
+
+2026.08.15.1
+- Stalker-TV berücksichtigt use_http_tmp_link und use_load_balancing.
+- Direkte Portal-URLs werden nicht mehr unnötig in kurzlebige Links umgewandelt.
+- Einmaligen Stalker-Watchdog-Aufruf nach der Profilinitialisierung ergänzt.
+
+2026.07.25
+- Film- und Serienkatalog auf die neue MediaHubMX-Katalog-API umgestellt.
+- „Beliebt“ und „Angesagt“ für Filme und Serien an die neuen Katalog-IDs und Sortierungen angepasst.
+- Genre-Auswahl auf den neuen filter.genre-Parameter umgestellt.
+- Genre-Namen mit Sonderzeichen wie „Action & Adventure“ werden korrekt übertragen.
+- Pagination für Katalog, Genre-Auswahl und Suche an nextCursor angepasst.
+- TMDB-IDs aus der neuen API-Antwort werden für Filme und Serien normalisiert.
+- Alten CCAPI-Listen- und Cachepfad entfernt.

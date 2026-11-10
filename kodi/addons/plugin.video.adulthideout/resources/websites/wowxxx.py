@@ -1,0 +1,500 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import html
+import json
+import os
+import re
+import sys
+import time
+import urllib.parse
+
+import requests
+import xbmc
+import xbmcgui
+import xbmcplugin
+import xbmcvfs
+
+from resources.lib.base_website import BaseWebsite
+from resources.lib.proxy_utils import PlaybackGuard, ProxyController
+
+
+class Wowxxx(BaseWebsite):
+    def __init__(self, addon_handle, addon=None):
+        super().__init__(
+            name="wowxxx",
+            base_url="https://www.wowxxx.to/",
+            search_url="https://www.wowxxx.to/search/{}/",
+            addon_handle=addon_handle,
+            addon=addon,
+        )
+        self.label = "WOW.xxx"
+        self.session = requests.Session()
+        self.ua = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/125.0.0.0 Safari/537.36"
+        )
+        self.sort_options = ["Latest", "Top Rated", "Most Viewed"]
+        self.sort_paths = {
+            "Latest": "/latest-updates/",
+            "Top Rated": "/top-rated/",
+            "Most Viewed": "/most-popular/",
+        }
+        self.quality_options = ["Highest", "2160p", "1080p", "720p", "480p"]
+
+    def _headers(self, referer=None, accept="text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"):
+        return {
+            "User-Agent": self.ua,
+            "Referer": referer or self.base_url,
+            "Accept": accept,
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+
+    def _thumb(self, thumb):
+        if not thumb or not thumb.startswith("http"):
+            return thumb or self.icon
+        try:
+            from resources.lib.thumb_proxy import build_thumb_url
+            return build_thumb_url(thumb, referer="https://www.wowxxx.to/")
+        except Exception:
+            return thumb
+
+    def _get_cache_file(self):
+        try:
+            profile_dir = xbmcvfs.translatePath(self.addon.getAddonInfo("profile"))
+            if not os.path.exists(profile_dir):
+                os.makedirs(profile_dir, exist_ok=True)
+            return os.path.join(profile_dir, f"clearance_{self.name}.json")
+        except Exception:
+            return ""
+
+    def _load_cached_cookies(self):
+        try:
+            cached = None
+            prop = xbmcgui.Window(10000).getProperty(f"AdultHideout.Clearance.{self.name}")
+            if prop:
+                cached = json.loads(prop)
+            else:
+                cache_file = self._get_cache_file()
+                if cache_file and os.path.isfile(cache_file):
+                    with open(cache_file, "r", encoding="utf-8") as f:
+                        cached = json.load(f)
+                    if cached:
+                        xbmcgui.Window(10000).setProperty(f"AdultHideout.Clearance.{self.name}", json.dumps(cached))
+
+            if cached:
+                if time.time() - cached.get("ts", 0) < 86400:
+                    self.session.cookies.clear()
+                    for name, val in cached.get("cookies", {}).items():
+                        self.session.cookies.set(name, val, domain=".wowxxx.to")
+                    if cached.get("ua"):
+                        self.ua = cached["ua"]
+        except Exception as exc:
+            self.logger.warning("Failed to load cached clearance for %s: %s", self.name, exc)
+
+    def _save_cached_cookies(self, cookies, ua):
+        if not cookies:
+            return
+        cookie_dict = {c["name"]: c["value"] for c in cookies if c.get("name") and c.get("value")}
+        if not cookie_dict:
+            return
+        try:
+            payload = {
+                "cookies": cookie_dict,
+                "domain": ".wowxxx.to",
+                "ua": ua,
+                "ts": time.time(),
+            }
+            raw = json.dumps(payload)
+            xbmcgui.Window(10000).setProperty(f"AdultHideout.Clearance.{self.name}", raw)
+            cache_file = self._get_cache_file()
+            if cache_file:
+                with open(cache_file, "w", encoding="utf-8") as f:
+                    f.write(raw)
+        except Exception as exc:
+            self.logger.warning("Failed to save cached clearance for %s: %s", self.name, exc)
+
+    def _get(self, url, referer=None, max_retries=2):
+        background = getattr(self, "adult_hideout_background_harvest", False)
+        deadline = time.monotonic() + (5 if background else 25)
+        if background:
+            max_retries = min(max_retries, 1)
+        self._load_cached_cookies()
+        last_error = None
+        for attempt in range(1, max_retries + 1):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            try:
+                response = self.session.get(
+                    url, headers=self._headers(referer), timeout=min(2 if background else 5, remaining)
+                )
+                usable = self._usable_html(response.text)
+                if response.status_code == 200 and usable:
+                    return response.text
+                last_error = "HTTP {}".format(response.status_code)
+                if response.status_code in (403, 503) or (response.status_code == 200 and not usable):
+                    break
+                self.logger.warning("WOW.xxx HTTP %s for %s", response.status_code, url)
+            except Exception as exc:
+                last_error = exc
+                self.logger.warning("WOW.xxx request error for %s: %s", url, exc)
+                self.session = requests.Session()
+
+            if attempt < max_retries:
+                pause = min(100 * attempt, int((deadline - time.monotonic()) * 1000))
+                if pause > 0:
+                    xbmc.sleep(pause)
+
+        # Fallback to PhantomFlare (FlareSolverr API on 127.0.0.1:8191)
+        try:
+            self.logger.info("WOW.xxx trying PhantomFlare fallback for %s", url)
+            # A challenge response can leave the Core with a usable cookie. Keep any retry
+            # within the same request budget; background searches only try once.
+            for flare_attempt in range(1 if background else 2):
+                limit = 5 if background else (14 if not flare_attempt else 6)
+                budget = min(deadline - time.monotonic(), limit)
+                if budget <= 1:
+                    break
+                flare_resp = requests.post(
+                    "http://127.0.0.1:8191/v1",
+                    json={"cmd": "request.get", "url": url, "maxTimeout": int((budget - 0.5) * 1000)},
+                    timeout=(0.5, budget - 0.5),
+                )
+                if flare_resp.status_code != 200:
+                    break
+                data = flare_resp.json()
+                sol = data.get("solution") if isinstance(data, dict) else None
+                if not isinstance(sol, dict):
+                    break
+                body = sol.get("response")
+                if sol.get("status") == 200 and self._usable_html(body):
+                    cookies = sol.get("cookies") or []
+                    cookies_list = [
+                        cookie for cookie in cookies
+                        if isinstance(cookie, dict)
+                        and all(isinstance(cookie.get(key), str) and cookie[key] for key in ("name", "value"))
+                    ] if isinstance(cookies, list) else []
+                    ua = sol.get("userAgent", "")
+                    self.session.cookies.clear()
+                    for cookie in cookies_list:
+                        self.session.cookies.set(cookie["name"], cookie["value"], domain=".wowxxx.to")
+                    if isinstance(ua, str) and ua:
+                        self.ua = ua
+                    self._save_cached_cookies(cookies_list, self.ua)
+                    return body
+                self.logger.warning("WOW.xxx PhantomFlare solution status %s (attempt %s)", sol.get("status"), flare_attempt + 1)
+                if sol.get("status") not in (403, 503):
+                    break
+        except Exception as flare_err:
+            self.logger.warning("WOW.xxx PhantomFlare fallback failed for %s: %s", url, flare_err)
+
+        self.logger.error("WOW.xxx failed to fetch %s: %s", url, last_error)
+        return ""
+
+    @staticmethod
+    def _usable_html(body):
+        return bool(isinstance(body, str) and body.strip() and not re.search(
+            r"(?:^\s*|<title[^>]*>\s*)just a moment\b|(?:window\.)?_cf_chl_opt\s*=",
+            body[:32768], re.IGNORECASE,
+        ))
+
+    def _absolute(self, value):
+        if not value:
+            return ""
+        return urllib.parse.urljoin(self.base_url, html.unescape(value).strip())
+
+    def _clean(self, value):
+        value = re.sub(r"<[^>]+>", " ", value or "")
+        return re.sub(r"\s+", " ", html.unescape(value)).strip()
+
+    def _get_sort_key(self):
+        try:
+            idx = int(self.addon.getSetting("wowxxx_sort_by") or "0")
+        except Exception:
+            idx = 0
+        if not 0 <= idx < len(self.sort_options):
+            idx = 0
+        return self.sort_options[idx]
+
+    def _get_quality_preference(self):
+        try:
+            idx = int(self.addon.getSetting("wowxxx_quality") or "0")
+        except Exception:
+            idx = 0
+        if not 0 <= idx < len(self.quality_options):
+            idx = 0
+        return self.quality_options[idx]
+
+    def get_start_url_and_label(self):
+        sort_key = self._get_sort_key()
+        return self._absolute(self.sort_paths.get(sort_key, "/latest-updates/")), (
+            "{} [COLOR yellow]{}[/COLOR]".format(self.label, sort_key)
+        )
+
+    def _context_menu(self, original_url=None):
+        suffix = ""
+        if original_url:
+            suffix = "&original_url={}".format(urllib.parse.quote_plus(original_url))
+        return [
+            (
+                "Sort by...",
+                "RunPlugin({}?mode=7&action=select_sort&website={}{} )".format(
+                    sys.argv[0], self.name, suffix
+                ).replace(" )", ")"),
+            )
+        ]
+
+    def _is_top_listing(self, url):
+        parsed = urllib.parse.urlparse(url or "")
+        return parsed.path.strip("/") in ("", "latest-updates")
+
+    def _extract_videos(self, html_content):
+        videos = []
+        seen = set()
+        for block in re.split(r'(?=<div\b[^>]+class=["\'][^"\']*item[^"\']*["\'])', html_content or "", flags=re.IGNORECASE):
+            if "/videos/" not in block:
+                continue
+            anchor_match = re.search(r"<a\b[^>]*>", block, re.IGNORECASE)
+            if not anchor_match:
+                continue
+            anchor = anchor_match.group(0)
+            href_match = re.search(r'\shref=["\']([^"\']+/videos/[^"\']+)["\']', anchor, re.IGNORECASE)
+            if not href_match:
+                continue
+            video_url = self._absolute(href_match.group(1))
+            if not video_url or video_url in seen:
+                continue
+            seen.add(video_url)
+
+            title_match = re.search(r'\stitle=["\']([^"\']+)["\']', anchor, re.IGNORECASE)
+            img_match = re.search(r"<img\b[^>]*>", block, re.IGNORECASE)
+            img_tag = img_match.group(0) if img_match else ""
+            if not title_match:
+                title_match = re.search(r'\salt=["\']([^"\']+)["\']', img_tag, re.IGNORECASE)
+            thumb_match = re.search(r'\sdata-src=["\']([^"\']+)["\']', img_tag, re.IGNORECASE)
+            if not thumb_match:
+                thumb_match = re.search(r'\ssrc=["\']([^"\']+)["\']', img_tag, re.IGNORECASE)
+            duration_match = re.search(r'<span\b[^>]*class=["\'][^"\']*duration[^"\']*["\'][^>]*>([\s\S]*?)</span>', block, re.IGNORECASE)
+
+            title = self._clean(title_match.group(1) if title_match else "")
+            if not title:
+                continue
+            thumb = self._thumb(self._absolute(thumb_match.group(1))) if thumb_match else self.icon
+            if thumb.startswith("data:image/"):
+                thumb = self.icon
+            duration = self._clean(duration_match.group(1)) if duration_match else ""
+            label = "{} [COLOR lime]({})[/COLOR]".format(title, duration) if duration else title
+            info = {"title": title, "plot": title}
+            seconds = self.convert_duration(duration.replace("Full Video", "").strip()) if duration else 0
+            if seconds:
+                info["duration"] = seconds
+            videos.append({"label": label, "url": video_url, "thumb": thumb or self.icon, "info": info})
+        return videos
+
+    def _extract_next_page(self, html_content, current_url):
+        parsed = urllib.parse.urlparse(current_url or self.base_url)
+        current = 1
+        page_match = re.search(r"/(\d+)/?$", parsed.path)
+        if page_match:
+            current = int(page_match.group(1))
+        candidates = []
+        for href, num in re.findall(r'href=["\']([^"\']*/(\d+)/?)["\']', html_content or "", re.IGNORECASE):
+            next_url = self._absolute(href)
+            next_path = urllib.parse.urlparse(next_url).path
+            if not any(segment in next_path for segment in ("/latest-updates/", "/top-rated/", "/most-popular/", "/categories/", "/search/")):
+                continue
+            next_url = re.sub(r"/0/(\d+)/?$", r"/\1/", next_url)
+            try:
+                page_num = int(num)
+            except ValueError:
+                continue
+            if page_num > current:
+                candidates.append((page_num, next_url))
+        if not candidates:
+            return None
+        return sorted(candidates, key=lambda item: item[0])[0][1]
+
+    def process_content(self, url, page=1):
+        if not url or url == "BOOTSTRAP":
+            url, _ = self.get_start_url_and_label()
+
+        context_menu = self._context_menu(url)
+        if self._is_top_listing(url):
+            self.add_dir("Search", "", 5, self.icons.get("search", self.icon), context_menu=context_menu)
+            self.add_dir("Categories", self._absolute("/categories/"), 8, self.icons.get("categories", self.icon), context_menu=context_menu)
+
+        html_content = self._get(url)
+        if not html_content:
+            self.notify_error("Could not load WOW.xxx listing")
+            xbmcplugin.endOfDirectory(self.addon_handle, succeeded=False, updateListing=False, cacheToDisc=False)
+            return
+
+        videos = self._extract_videos(html_content)
+        if not videos:
+            self.notify_error("No WOW.xxx videos found")
+            return self.end_directory("videos")
+
+        for item in videos:
+            self.add_link(
+                item["label"],
+                item["url"],
+                4,
+                item["thumb"],
+                self.fanart,
+                context_menu=context_menu,
+                info_labels=item["info"],
+            )
+
+        next_url = self._extract_next_page(html_content, url)
+        if next_url:
+            self.add_dir("Next Page", next_url, 2, self.icons.get("default", self.icon), context_menu=context_menu)
+
+        self.end_directory("videos")
+
+    def process_categories(self, url):
+        html_content = self._get(url or self._absolute("/categories/"))
+        if not html_content:
+            self.notify_error("Could not load WOW.xxx categories")
+            xbmcplugin.endOfDirectory(self.addon_handle, succeeded=False, updateListing=False, cacheToDisc=False)
+            return
+
+        seen = set()
+        for href, label_html in re.findall(
+            r'<a\b[^>]*href=["\']([^"\']*/categories/[^"\']+)["\'][^>]*>([\s\S]*?)</a>',
+            html_content,
+            re.IGNORECASE,
+        ):
+            category_url = self._absolute(href)
+            if not category_url or category_url in seen or urllib.parse.urlparse(category_url).path.rstrip("/") == "/categories":
+                continue
+            seen.add(category_url)
+            title = self._clean(label_html)
+            if not title:
+                title = urllib.parse.urlparse(category_url).path.rstrip("/").rsplit("/", 1)[-1].replace("-", " ").title()
+            self.add_dir(title, category_url, 2, self.icons.get("categories", self.icon), self.fanart)
+
+        self.end_directory("videos")
+
+    def search(self, query):
+        if query:
+            self.process_content(self.search_url.format(urllib.parse.quote_plus(query.strip())))
+
+    def _extract_sources(self, html_content):
+        sources = []
+        for tag in re.findall(r"<source\b[^>]+>", html_content or "", re.IGNORECASE):
+            src_match = re.search(r'\ssrc=["\']([^"\']+\.mp4/?)["\']', tag, re.IGNORECASE)
+            if not src_match:
+                continue
+            label_match = re.search(r'\slabel=["\']([^"\']+)["\']', tag, re.IGNORECASE)
+            label = label_match.group(1) if label_match else ""
+            quality_match = re.search(r"(\d{3,4})", label)
+            if not quality_match:
+                quality_match = re.search(r"_(\d{3,4})m\.mp4", src_match.group(1), re.IGNORECASE)
+            quality = int(quality_match.group(1)) if quality_match else 0
+            sources.append({"quality": quality, "url": self._absolute(src_match.group(1))})
+        return sources
+
+    def _ordered_sources(self, sources):
+        if not sources:
+            return []
+        preference = self._get_quality_preference()
+        sources = sorted(sources, key=lambda item: item["quality"], reverse=True)
+        if preference == "Highest":
+            return sources
+        wanted = int(re.sub(r"\D", "", preference) or "0")
+        exact = [item for item in sources if item["quality"] == wanted]
+        lower = [item for item in sources if item["quality"] and item["quality"] <= wanted and item not in exact]
+        higher = [item for item in sources if item not in exact and item not in lower]
+        return exact + sorted(lower, key=lambda item: item["quality"], reverse=True) + sorted(higher, key=lambda item: item["quality"], reverse=True)
+
+    def _stream_headers(self, page_url):
+        headers = {
+            "User-Agent": self.ua,
+            "Referer": page_url,
+            "Accept": "*/*",
+            "Accept-Encoding": "identity",
+        }
+        cookie_header = "; ".join("{}={}".format(cookie.name, cookie.value) for cookie in self.session.cookies)
+        if cookie_header:
+            headers["Cookie"] = cookie_header
+        return headers
+
+    def _probe_stream(self, stream_url, headers):
+        try:
+            response = self.session.head(stream_url, headers=headers, allow_redirects=True, timeout=10)
+            content_type = response.headers.get("Content-Type", "").lower()
+            if response.status_code in (200, 206) and ("video" in content_type or "octet-stream" in content_type):
+                return response.url or stream_url
+        except Exception as exc:
+            self.logger.warning("WOW.xxx HEAD probe failed for stream candidate: %s", exc)
+
+        try:
+            probe_headers = dict(headers)
+            probe_headers["Range"] = "bytes=0-1"
+            response = self.session.get(stream_url, headers=probe_headers, allow_redirects=True, timeout=12, stream=True)
+            try:
+                content_type = response.headers.get("Content-Type", "").lower()
+                if response.status_code in (200, 206) and ("video" in content_type or "octet-stream" in content_type):
+                    return response.url or stream_url
+            finally:
+                response.close()
+        except Exception as exc:
+            self.logger.warning("WOW.xxx Range probe failed for stream candidate: %s", exc)
+
+        return None
+
+    def resolve_recording_stream(self, url):
+        html_content = self._get(url, referer=self.base_url)
+        sources = self._ordered_sources(self._extract_sources(html_content))
+        if not sources:
+            self.logger.info("WOW.xxx no public stream on detail page: %s", url)
+            return None
+
+        headers = self._stream_headers(url)
+        for source in sources:
+            stream_url = source.get("url")
+            if not stream_url:
+                continue
+            playable_url = self._probe_stream(stream_url, headers)
+            if playable_url:
+                return {"url": playable_url, "headers": headers, "extension": "mp4"}
+
+        self.logger.info("WOW.xxx no reachable stream candidates on detail page: %s", url)
+        return None
+
+    def play_video(self, url):
+        resolved = self.resolve_recording_stream(url)
+        if not resolved:
+            self.notify_error("Could not resolve WOW.xxx stream")
+            xbmcplugin.setResolvedUrl(self.addon_handle, False, xbmcgui.ListItem())
+            return
+
+        play_url = resolved["url"]
+        headers = resolved.get("headers") or {}
+        playback_controller = None
+        try:
+            playback_controller = ProxyController(
+                upstream_url=play_url,
+                upstream_headers=headers,
+                cookies=self.session.cookies.get_dict() if self.session else None,
+                use_urllib=True,
+                probe_size=True,
+            )
+            play_url = playback_controller.start()
+            self.logger.info("WOW.xxx using in-process Range proxy for playback")
+        except Exception as exc:
+            playback_controller = None
+            self.logger.warning("WOW.xxx Range proxy failed, falling back direct: %s", exc)
+
+        if headers and playback_controller is None:
+            play_url = "{}|{}".format(play_url, urllib.parse.urlencode(headers))
+
+        list_item = xbmcgui.ListItem(path=play_url)
+        list_item.setProperty("IsPlayable", "true")
+        list_item.setMimeType("video/mp4")
+        list_item.setContentLookup(False)
+        xbmcplugin.setResolvedUrl(self.addon_handle, True, list_item)
+        if playback_controller:
+            PlaybackGuard(xbmc.Player(), xbmc.Monitor(), play_url, playback_controller).start()

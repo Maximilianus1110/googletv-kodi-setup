@@ -1,0 +1,10 @@
+{
+    "name": "xStream Nightly",
+    "plugin": "plugin.video.xstream-nightly",
+    "priority": 20,
+    "is_resolvable": "false",
+    "play_movie": "executebuiltin://ActivateWindow(Videos,plugin://plugin.video.xstream-nightly/?function=searchTMDB&searchTitle={title_url},return)",
+    "play_episode": "executebuiltin://ActivateWindow(Videos,plugin://plugin.video.xstream-nightly/?function=searchTMDB&searchTitle={showname_url},return)",
+    "search_movie": "plugin://plugin.video.xstream-nightly/?function=searchTMDB&searchTitle={title_url}",
+    "search_episode": "plugin://plugin.video.xstream-nightly/?function=searchTMDB&searchTitle={showname_url}"
+}

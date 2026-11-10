@@ -1,0 +1,30 @@
+[
+    {
+        "label": "Filme (TMDb)",
+        "icon": "special://skin/extras/icons/film.png",
+        "path": "DefaultSearch-TMDBMovies",
+        "target": "videos",
+        "widget_style": "Poster"
+    },
+    {
+        "label": "Serien (TMDb)",
+        "icon": "special://skin/extras/icons/tv.png",
+        "path": "DefaultSearch-TMDBShows",
+        "target": "videos",
+        "widget_style": "Poster"
+    },
+    {
+        "label": "xStream Direkt-Suche",
+        "icon": "special://skin/extras/icons/video-addons.png",
+        "path": "plugin://plugin.video.xstream/?function=searchTMDB&searchTitle=",
+        "target": "videos",
+        "widget_style": "Poster"
+    },
+    {
+        "label": "Schauspieler & Personen (TMDb)",
+        "icon": "special://skin/extras/icons/actor.png",
+        "path": "DefaultSearch-TMDBPeople",
+        "target": "videos",
+        "widget_style": "Poster"
+    }
+]

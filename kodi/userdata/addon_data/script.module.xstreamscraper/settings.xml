@@ -1,0 +1,24 @@
+<settings version="2">
+    <setting id="stream_select">1</setting>
+    <setting id="auto_try_next_stream">true</setting>
+    <setting id="progress_background" default="true">false</setting>
+    <setting id="vavoo">true</setting>
+    <setting id="internetarchive" default="true">false</setting>
+    <setting id="filmo">true</setting>
+    <setting id="streamcloud">true</setting>
+    <setting id="burningseries" default="true">false</setting>
+    <setting id="netzkino">true</setting>
+    <setting id="kellerkino">true</setting>
+    <setting id="movie2k">true</setting>
+    <setting id="megakino">true</setting>
+    <setting id="animetoast">true</setting>
+    <setting id="moflix-stream">true</setting>
+    <setting id="serienstream">true</setting>
+    <setting id="kinoger">true</setting>
+    <setting id="aniworld">true</setting>
+    <setting id="api_sites" default="true">false</setting>
+    <setting id="hdfilme">true</setting>
+    <setting id="filmpalast">true</setting>
+    <setting id="einschalten">true</setting>
+    <setting id="firststart" default="true">true</setting>
+</settings>

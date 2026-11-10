@@ -1,0 +1,13 @@
+{
+    "name": "VAVOO.TO Direkt",
+    "plugin": "plugin.video.vavooto",
+    "priority": 20,
+    "is_resolvable": "true",
+    "assert": {
+        "play_movie": ["tmdb"],
+        "play_episode": ["tmdb", "season", "episode"]
+    },
+    "play_movie": "plugin://plugin.video.vavooto/?action=get&id=movie.{tmdb}&n={title_url}",
+    "play_episode": "plugin://plugin.video.vavooto/?action=get&id=series.{tmdb}&s={season}&e={episode}&n={showname_url}",
+    "make_playlist": "true"
+}
