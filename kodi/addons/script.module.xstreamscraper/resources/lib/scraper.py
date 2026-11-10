@@ -311,6 +311,104 @@ def get_details(_type, _id):
 	oRequest.cacheTime = 60 * 60 * 24 * 14
 	return oRequest.requestJson()
 
+_PRELOAD_CACHE = {}
+
+def pre_resolve(_type, _id, season, episode):
+	if _type != "tv": return
+	key = "tv.%s.%s.%s" % (_id, season, episode)
+	if key in _PRELOAD_CACHE: return
+	try:
+		data = get_details(_type, _id)
+		if not data: return
+		name, releaseDate = data.get("name"), data.get("first_air_date")
+		if not name or not releaseDate: return
+		mirrors = []
+		if xbmcaddon.Addon().getSetting('vavoo') == 'true':
+			param = _vavoo_param(_type, _id, name, season, episode)
+			mirrors = _vavoo_mirrors(param)
+		results = data.get("alternative_titles", {}).get("results")
+		searchtitles = [a["title"] for a in results] if results else []
+		searchtitles.append(name)
+		original = data.get("original_name") or data.get("original_title")
+		if original: searchtitles.append(original)
+		titles = [cleantitle(a) for a in searchtitles]
+		hasPriority = xbmcaddon.Addon().getSetting(PRIORITY_SITE) == "true"
+		failures = streamHistory.Failures(key)
+		usedStreams = streamHistory.used(key)
+		def find_prio():
+			sources = searchGlobal(name.split(":")[0], titles, True, _type, _id, season, episode, int(releaseDate[:4]), lambda site: site == PRIORITY_SITE)
+			return get_hosters(sources, True, season, episode) if sources else []
+		priority = find_prio() if hasPriority else mirrors
+		queue = [c for c in priority if streamHistory.streamId(c) not in usedStreams]
+		if not queue and mirrors: queue = mirrors
+		for candidate in queue:
+			if failures.has(candidate): continue
+			try:
+				url = streamTest.runLimited(lambda c=candidate: _test(c))
+				if url:
+					_PRELOAD_CACHE[key] = (candidate, url, time.time())
+					logger.info("Autoplay-Vorauswahl erfolgreich für %s: %s" % (key, candidate.get("name")))
+					break
+			except Exception:
+				continue
+	except Exception as e:
+		logger.info("Fehler bei pre_resolve: %s" % e)
+
+def select_and_play(_type, _id, season, episode, resume_time=None):
+	with quietWindows():
+		data = get_details(_type, _id)
+		if not data: return showFailedNotification("TMDB nicht erreichbar")
+		if _type == "tv": isSerie, name, releaseDate = True, data["name"], data["first_air_date"]
+		else: isSerie, name, releaseDate = False, data["title"], data["release_date"]
+		media_meta = {
+			'type': _type,
+			'tmdb_id': _id,
+			'season': season,
+			'episode': episode,
+			'title': name,
+			'year': releaseDate[:4] if releaseDate else None,
+			'imdb': data.get('imdb_id')
+		}
+		if resume_time:
+			media_meta['resume_time'] = resume_time
+		dialog.create("Suche Quellen...", "Sammle alle verfügbaren Streams...")
+		mirrors = []
+		if xbmcaddon.Addon().getSetting('vavoo') == 'true':
+			param = _vavoo_param(_type, _id, name, season, episode)
+			mirrors = _vavoo_mirrors(param)
+		results = data.get("alternative_titles", {}).get("results")
+		searchtitles = [a["title"] for a in results] if results else []
+		searchtitles.append(name)
+		original = data.get("original_name") or data.get("original_title")
+		if original: searchtitles.append(original)
+		titles = [cleantitle(a) for a in searchtitles]
+		sources = searchGlobal(name.split(":")[0], titles, isSerie, _type, _id, season, episode, int(releaseDate[:4]))
+		hosters = get_hosters(sources, isSerie, season, episode) if sources else []
+		dialog.close()
+		candidates = mirrors + hosters
+		if not candidates:
+			return showFailedNotification("Keine Streams gefunden")
+		labels = []
+		for i, c in enumerate(candidates, 1):
+			h = c.get("name") or "Stream"
+			site = c.get("site", "Online").capitalize()
+			lang = c.get("languageCode") or ""
+			labels.append(f"{i}. [{h}] {site} {lang}".strip())
+		header = f"Stream wählen: {name}"
+		if isSerie: header += f" S{season:02d}E{episode:02d}"
+		chosen = xbmcgui.Dialog().select(header, labels)
+		if chosen < 0:
+			return
+		candidate = candidates[chosen]
+		dialog.create("Teste ausgewählten Stream...", f"{candidate.get('name')} ({candidate.get('site')})")
+		url = _test(candidate)
+		dialog.close()
+		if not url:
+			xbmcgui.Dialog().notification("Stream-Fehler", "Dieser Stream funktioniert leider nicht.", xbmcgui.NOTIFICATION_WARNING)
+			return select_and_play(_type, _id, season, episode, resume_time)
+		logger.info("Spiele manuell ausgewählten Stream: %s" % url)
+		_play(url, media_meta)
+
 def play(_type, _id, season, episode):
 	# Keine blockierenden Fehlerfenster von xStream, solange der Scraper automatisch sucht.
 	with quietWindows():
@@ -422,6 +520,11 @@ def _search_and_play(_type, _id, season, episode):
 			mirrors = _vavoo_mirrors(param)
 	# Pro Film bzw. Folge: nur wer genau denselben Titel noch einmal startet, bekommt einen anderen Stream.
 	key = "tv.%s.%s.%s" % (_id, season, episode) if isSerie else "movie.%s" % _id
+	if key in _PRELOAD_CACHE:
+		cand, preloaded_url, preloaded_ts = _PRELOAD_CACHE.pop(key)
+		if time.time() - preloaded_ts < 7200:
+			logger.info("Nutze im Hintergrund vorbereiteten Autoplay-Stream fuer %s: %s" % (key, preloaded_url))
+			return _play(preloaded_url, media_meta)
 	usedStreams = streamHistory.used(key)
 	tried = []
 	results = data.get("alternative_titles", {}).get("results")
@@ -526,9 +629,21 @@ def _listitem(url, label, meta=None):
 
 def _play(url, meta=None):
 	global resolved
-	o, _ = _listitem(url, xbmc.getInfoLabel("ListItem.Label"), meta)
+	label = xbmc.getInfoLabel("ListItem.Label")
+	if not label and meta:
+		label = meta.get("title", "")
+	o, path = _listitem(url, label, meta)
 	resolved = True
-	xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, o)
+	if len(sys.argv) > 1 and sys.argv[1].isdigit() and int(sys.argv[1]) > 0:
+		xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, o)
+	else:
+		xbmc.Player().play(path, o)
+		if meta and meta.get('resume_time'):
+			try:
+				xbmc.sleep(1000)
+				xbmc.Player().seekTime(float(meta['resume_time']))
+			except Exception:
+				pass
 
 def _replay(player, url, label, meta=None):
 	# Der Aufruf von Kodi ist schon mit dem gescheiterten Stream beantwortet, also direkt abspielen.

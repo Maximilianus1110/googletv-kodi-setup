@@ -2,14 +2,14 @@
   <FullscreenVideo>
     <remote>
       <up>OSD</up>
-      <down>OSD</down>
+      <down>ActivateWindow(1140)</down>
       <left>StepBack</left>
       <right>StepForward</right>
       <select>PlayPause</select>
     </remote>
     <keyboard>
       <up>OSD</up>
-      <down>OSD</down>
+      <down>ActivateWindow(1140)</down>
       <left>StepBack</left>
       <right>StepForward</right>
       <return>PlayPause</return>
@@ -33,11 +33,9 @@
   </FullscreenLiveTV>
   <VideoOSD>
     <remote>
-      <down>Close</down>
       <back>Close</back>
     </remote>
     <keyboard>
-      <down>Close</down>
       <escape>Close</escape>
       <backspace>Close</backspace>
       <browser_back>Close</browser_back>

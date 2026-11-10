@@ -22,6 +22,14 @@ Dieses Setup verwandelt dein Kodi in ein blitzschnelles, modernes Mediacenter im
 * ▶️ **„Weiterschauen“ & „Nächste Episoden“ (Trakt.tv Sync):**
   * Angefangene Filme und Serienfolgen erscheinen direkt mit Fortschrittsbalken auf der Startseite.
   * Beendete Folgen schalten automatisch die nächste Episode frei.
+* ⏩ **Nahtloses Autoplay & Hintergrund-Vorabladen (Preloading):**
+  * Nächste Episoden werden wie bei Netflix/Prime Video automatisch abgespielt.
+  * Hintergrund-Preloading (8 Sekunden nach Start): Der Stream für Folge N+1 wird bereits im RAM gecacht – 0 Sekunden Wartezeit beim Episodenwechsel!
+  * Eingebauter UpNext-Countdown 15 Sekunden vor Episodenende.
+* 📺 **In-Player Episoden-Schublade & Stream-Auswahl:**
+  * **Steuerkreuz Unten (▼):** Öffnet direkt im laufenden Video die **Staffel-Episoden-Schublade** (wie bei Prime Video) zum schnellen Folgenwechsel.
+  * **OSD-Button 🔄:** Mitten im Video alternative Hoster/Streams auswählen (bei schlechter Videoqualität) und an exakt derselben Sekunde fortsetzen.
+  * Optional auch vor dem Abspielen über das Kontextmenü (*Abspielen mit...* -> *Quelle manuell wählen*).
 * 📺 **YouTube & SmartTube Integration:**
   * Echte persönliche Empfehlungen deines Google-Kontos auf der Startseite (`FEwhat_to_watch`).
   * Gepatchter TV-OAuth Flow: Anmeldung über `google.com/device` ohne nervige Google-Sicherheitsblockaden.
@@ -69,6 +77,7 @@ Das Skript sichert automatisch deine bisherigen Keymaps, überträgt alle vorkon
 Alle Spezialbereiche sind detailliert im Ordner [`docs/`](docs/) beschrieben:
 
 * 🎮 [**Fernbedienungs-Belegung & Gesten**](docs/REMOTE_CONTROLS.md): Detaillierte Übersicht aller Tastenfunktionen während der Wiedergabe und im Hauptmenü.
+* ⏩ [**Autoplay, Episodenschublade & Stream-Auswahl**](docs/AUTOPLAY_AND_STREAM_SELECT.md): Nahtlose Wiedergabe, Vorabladen im Hintergrund, Prime-Video-Episodenauswahl & Quellenwechsler.
 * 🎬 [**Trakt-Einrichtung („Weiterschauen“)**](docs/TRAKT_SETUP.md): Wie du dein kostenloses Trakt-Konto mit Kodi verbindest und den Netflix-Fortschrittsbalken aktivierst.
 * 📺 [**YouTube-Login & Startseite**](docs/YOUTUBE_SETUP.md): Google TV Geräte-Login ohne Sicherheitswarnung und Personalisierung deiner Empfehlungen.
 * 🔒 [**Erwachsenenbereich (+18)**](docs/ADULT_SETUP.md): Alles zum PIN-Code `0000`, der 5-Minuten-Sitzungsverwaltung und der Tarnung.
@@ -87,6 +96,7 @@ Alle Spezialbereiche sind detailliert im Ordner [`docs/`](docs/) beschrieben:
 | **YouTube** | `plugin.video.youtube` | 7.4.4 (Gepatcht: TV-Client OAuth, kein Google-Block) |
 | **AdultHideout** | `plugin.video.adulthideout` | 1.0.27 (Gepatcht: Core PIN `0000` & 5-Min Timeout) |
 | **AdultHideout Core** | `service.adulthideout.core` | 1.0.1 (Gepatcht: Python-Fallback) |
+| **Up Next (Autoplay)** | `service.upnext` | 1.3.4 (Automatischer Episodenübergang & Preload) |
 | **VAVOO.TO** | `plugin.video.vavooto` | 2026.11.02.5 (Deutsche Live-TV Kanäle) |
 | **ResolveURL** | `script.module.resolveurl` | Aktuell (VOE, DoodStream, Filemoon etc.) |
 | **Trakt Sync** | `script.module.tmdbhelper.sync.trakt` | 1.2.9 (Cloud-Scrobbling) |

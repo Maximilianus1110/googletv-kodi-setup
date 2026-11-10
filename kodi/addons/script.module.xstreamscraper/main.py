@@ -19,7 +19,13 @@ def main():
 	type = "tv" if season !=0 and episode !=0 else "movie"
 	if tmdb_id:
 		from resources.lib import scraper
-		scraper.play(type, tmdb_id, season, episode)
+		if params.get("select") == "true":
+			resume = float(params.get("resume", 0)) if params.get("resume") else None
+			scraper.select_and_play(type, tmdb_id, season, episode, resume_time=resume)
+		elif params.get("preload") == "true":
+			scraper.pre_resolve(type, tmdb_id, season, episode)
+		else:
+			scraper.play(type, tmdb_id, season, episode)
 	elif repair:
 		addonTools.repair(True)
 	elif action:

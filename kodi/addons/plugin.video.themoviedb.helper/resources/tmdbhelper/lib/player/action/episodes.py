@@ -144,8 +144,10 @@ class PlayerNextEpisodes:
 
         if clear:
             self.playlist.clear()
-
-        for x, listitem in enumerate(listitems):  # Add all our episodes in the queue
-            self.playlist.add(listitem.getPath(), listitem, index=x)
+            for x, listitem in enumerate(listitems):  # Add all our episodes in the queue
+                self.playlist.add(listitem.getPath(), listitem, index=x)
+        else:
+            for listitem in listitems:
+                self.playlist.add(listitem.getPath(), listitem)
 
         return self.playlist

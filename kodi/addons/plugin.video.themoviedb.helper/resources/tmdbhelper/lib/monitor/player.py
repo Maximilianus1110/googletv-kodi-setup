@@ -455,7 +455,54 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
 
         # Update our properties
         self.set_properties(self.details)
+        if self.tmdb_id:
+            self.set_property('playing.tmdb_id', self.tmdb_id)
+        if self.season is not None:
+            self.set_property('playing.season', self.season)
+        if self.episode is not None:
+            self.set_property('playing.episode', self.episode)
+        if self.dbtype:
+            self.set_property('playing.dbtype', self.dbtype)
 
         # Start the selected scrobblers after any resume seek.
         self.wait_for_seek(10)
         self.scrobbler_start()
+        self.queue_autoplay_episodes()
+
+    def queue_autoplay_episodes(self):
+        if self.dbtype != 'episode':
+            return
+        if not self.tmdb_id or self.season is None or self.episode is None:
+            return
+        from tmdbhelper.lib.addon.thread import SafeThread
+        SafeThread(target=self._queue_episodes_worker, args=(self.tmdb_id, self.season, self.episode)).start()
+
+    def _queue_episodes_worker(self, tmdb_id, season, episode):
+        from xbmc import PlayList, PLAYLIST_VIDEO, Monitor
+        m = Monitor()
+        m.waitForAbort(2)
+        if m.abortRequested() or not self.isPlayingVideo():
+            return
+        playlist = PlayList(PLAYLIST_VIDEO)
+        if playlist.size() <= 1:
+            try:
+                from tmdbhelper.lib.player.action.episodes import PlayerNextEpisodes
+                pne = PlayerNextEpisodes(
+                    tmdb_id=tmdb_id,
+                    season=season,
+                    episode=episode,
+                    player='xstream.json'
+                )
+                pne.update(forced=True, single=False, clear=False)
+            except Exception:
+                pass
+
+        # Trigger preloading for next episode in background
+        m.waitForAbort(8)
+        if m.abortRequested() or not self.isPlayingVideo():
+            return
+        try:
+            from xbmc import executebuiltin
+            executebuiltin(f"RunPlugin(plugin://script.module.xstreamscraper/?id={tmdb_id}&season={season}&episode={int(episode)+1}&preload=true)")
+        except Exception:
+            pass

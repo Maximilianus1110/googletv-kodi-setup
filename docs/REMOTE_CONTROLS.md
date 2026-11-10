@@ -9,11 +9,12 @@ Die Steuerung in diesem Setup wurde speziell an das intuitive Verhalten moderner
 | Taste | Aktion | Verhalten & Funktion |
 | :--- | :--- | :--- |
 | **Steuerkreuz Oben (▲)** | `OSD` | Blendet den **Zeitbalken (Timeline)**, Filmtitel, Spielzeit und Restlaufzeit ein. |
-| **Steuerkreuz Unten (▼)** | `Close` | Blendet den Zeitbalken / das OSD **sofort wieder aus**. |
+| **Steuerkreuz Unten (▼)** | `Playlist Drawer` | Öffnet die **Staffel-Episoden-Schublade (Playlist)** direkt im Player (wie bei Prime Video) zum schnellen Folgenwechsel. |
 | **Steuerkreuz Links (◄)** | `StepBack` | Spult präzise **10 Sekunden zurück**. |
 | **Steuerkreuz Rechts (►)** | `StepForward` | Spult präzise **10 Sekunden vor**. |
 | **Auswahltaste (Mitte)** | `PlayPause` | Hält die Wiedergabe an (**Pause**) bzw. setzt sie fort (**Play**). |
-| **Zurück-Taste (Back)** | `Close` / `Back` | Schließt die OSD-Infoanzeige bzw. stoppt das Video bei wiederholtem Drücken. |
+| **Zurück-Taste (Back)** | `Close` / `Back` | Schließt die OSD-Infoanzeige bzw. die Episodenschublade, stoppt das Video bei wiederholtem Drücken. |
+| **OSD-Button 🔄** | `Change Stream` | Öffnet mitten im Video den **Stream-Auswahldialog** (VAVOO Mirrors, VOE, Filemoon etc.) und setzt die Wiedergabe nahtlos an der aktuellen Sekunde fort. |
 
 ---
 
