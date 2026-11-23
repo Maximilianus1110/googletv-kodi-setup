@@ -20,6 +20,7 @@ AUTO_SKIP_SETTINGS = {'intro': 'autoSkipIntro', 'recap': 'autoSkipRecap'}
 END_MARGIN = 1.0
 ACTION_NAV_BACK = 92
 ACTION_PREVIOUS_MENU = 10
+ACTION_STOP = 13
 BUTTON = 3010
 OS_MACHINE = machine()
 
@@ -65,6 +66,10 @@ class SkipButton(WindowXMLDialog):
 
     def onInit(self):  # pylint: disable=invalid-name
         self.setProperty('label', self.label)
+        try:
+            self.setFocusId(BUTTON)
+        except RuntimeError:
+            pass
 
     def onClick(self, controlId):  # pylint: disable=invalid-name
         if controlId == BUTTON:
@@ -73,7 +78,7 @@ class SkipButton(WindowXMLDialog):
             self.close()
 
     def onAction(self, action):  # pylint: disable=invalid-name
-        if action.getId() in (ACTION_NAV_BACK, ACTION_PREVIOUS_MENU):
+        if action.getId() in (ACTION_NAV_BACK, ACTION_PREVIOUS_MENU, ACTION_STOP):
             self.dismissed = True
             self.close()
 

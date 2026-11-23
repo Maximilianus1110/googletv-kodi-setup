@@ -1356,16 +1356,6 @@
                     <onfocus>Close</onfocus>
                     <onfocus>SetFocus(6010)</onfocus>
                 </control>
-                <control type="button" id="6011">
-                    <width>80</width>
-                    <texturefocus />
-                    <texturenofocus />
-                    <font />
-                    <label />
-                    <onfocus>Close</onfocus>
-                    <onfocus>SetFocus(6011)</onfocus>
-                    <visible>!VideoPlayer.Content(livetv)</visible>
-                </control>
 
             </control>
         </definition>

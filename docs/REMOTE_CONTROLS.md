@@ -16,7 +16,7 @@ Die Steuerung in diesem Setup wurde speziell an das intuitive Verhalten moderner
 | **Zurück-Taste (Back)** | `Close` / `Back` | Schließt die OSD-Infoanzeige bzw. die Episodenschublade, stoppt das Video bei wiederholtem Drücken. |
 | **OSD-Button 🔄** | `Change Stream` | Öffnet mitten im Video den **Stream-Auswahldialog** (VAVOO Mirrors, VOE, Filemoon etc.) und setzt die Wiedergabe nahtlos an der aktuellen Sekunde fort. |
 | **OSD-Button 🌙** | `Night Mode` | **Nachtmodus / Dialog-Booster:** Schaltet +10 dB Dynamikkompression ein (hebt leise Stimmen an und dämpft laute Explosionen). |
-| **OSD-Button ⏩** | `Skip Intro` | **Intro überspringen:** Springt zum Ende des Intros (TheIntroDB Online-Erkennung oder +85 Sek. Standard-Introsprung). |
+| **Popup „Intro skip“** | `Skip Intro` | Erscheint unten rechts **nur**, wenn für die Folge ein gültiges Intro erkannt wurde und gerade läuft. Ein Druck auf **Mitte / OK** springt zum Ende des Intros (kein Auto-Skip). |
 
 ---
 
