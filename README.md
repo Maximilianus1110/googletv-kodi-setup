@@ -33,9 +33,9 @@ Dieses Setup verwandelt dein Kodi in ein blitzschnelles, modernes Mediacenter im
   * Optional auch vor dem Abspielen über das Kontextmenü (*Abspielen mit...* -> *Quelle manuell wählen*).
 * 🌙 **Nachtmodus / Dialog-Booster (DRC):**
   * Per 1-Klick (OSD-Button 🌙) schaltet Kodi eine +10 dB Dynamikkompression ein: Leise Stimmen werden verständlich und laut, laute Explosionen sanft gedämpft.
-* ⏩ **Intro überspringen (TheIntroDB & 1-Klick OSD):**
-  * Erkennt Intros bekannter Serien automatisch online über TheIntroDB und zeigt das dezente Popup `⏩ Intro überspringen`.
-  * Zusätzlicher 1-Klick-Button ⏩ im Player OSD (+85s Sprung).
+* ⏩ **Intro überspringen (TheIntroDB, manuell per Button):**
+  * Erkennt Intros bekannter Serien automatisch online über TheIntroDB und blendet während des Intros einen dynamischen **`Intro skip`**-Button unten rechts ein.
+  * **Kein automatisches Überspringen:** Das Intro wird nur nach aktivem Klick auf den Button übersprungen.
 * ⏱️ **Timeline mit echtem Serientitel & 5s Auto-Hide:**
   * OSD zeigt nun vollständigen Serientitel, Staffel und Episodennummer statt nur „Es läuft“.
   * Timeline blendet sich nach 5 Sekunden Inaktivität automatisch aus.
@@ -45,7 +45,7 @@ Dieses Setup verwandelt dein Kodi in ein blitzschnelles, modernes Mediacenter im
   * Verlinkung zur werbefreien Android-App **SmartTube**.
 * 🎮 **Streaming-Standard Fernbedienung:**
   * **Oben (▲):** Zeitbalken (Timeline) & Filmtitel einblenden (OSD).
-  * **Unten (▼):** Zeitbalken sofort ausblenden.
+  * **Unten (▼):** Episoden-Schublade (Serien) bzw. Besetzung/Cast (Filme) öffnen.
   * **Links / Rechts (◄ / ►):** 10 Sekunden vor- / zurückspulen.
   * **Mitte:** Play / Pause.
 * 🔒 **Diskreter Erwachsenenbereich (+18 / XXX):**

@@ -157,7 +157,7 @@
     <setting id="hub.1102.spotlight.sortby" type="string"></setting>
     <setting id="customrating.movies.item03" type="string">Trakt</setting>
     <setting id="customrating.movies.item02" type="string">TMDb</setting>
-    <setting id="script-skinvariables-generator-hash" type="string">7cb523659503088f01bbac2f9b41e813</setting>
+    <setting id="script-skinvariables-generator-hash" type="string"></setting>
     <setting id="customrating.movies.item06" type="string"></setting>
     <setting id="home.menustyle" type="string"></setting>
     <setting id="home.leftmenu.action" type="string"></setting>

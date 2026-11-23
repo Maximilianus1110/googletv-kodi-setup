@@ -14,10 +14,10 @@
     <setting id="animetoast">true</setting>
     <setting id="moflix-stream">true</setting>
     <setting id="serienstream">true</setting>
-    <setting id="kinoger">true</setting>
+    <setting id="kinoger">false</setting>
     <setting id="aniworld">true</setting>
     <setting id="api_sites" default="true">false</setting>
-    <setting id="hdfilme">true</setting>
+    <setting id="hdfilme">false</setting>
     <setting id="filmpalast">true</setting>
     <setting id="einschalten">true</setting>
     <setting id="firststart" default="true">true</setting>

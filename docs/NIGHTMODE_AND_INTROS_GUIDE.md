@@ -31,16 +31,13 @@ Bei vielen Filmen und Serien sind Stimmen und Dialoge sehr leise abgemischt, wä
 
 ---
 
-## 3. ⏩ Intro überspringen (Skip Intro)
+## 3. ⏩ Intro überspringen („Intro skip“-Button)
 
-### Zwei perfekt kombinierte Erkennungsmethoden:
+### Dynamische Online-Erkennung (TheIntroDB, kein Auto-Skip):
 
-1. **Vollautomatische Online-Erkennung (TheIntroDB):**
-   * Beim Start einer Serienfolge gleicht das System die TMDb-ID, Staffel und Episode blitzschnell im Hintergrund mit der weltweiten Datenbank von **TheIntroDB** ab.
-   * Wird ein Intro-Segment gefunden, erscheint während des Intros automatisch unten rechts das dezente Popup **`⏩ Intro überspringen`**.
-   * Ein einfacher Druck auf die mittlere Taste überspringt das Intro sekundengenau zum Beginn der Handlung!
-   * Wer das Intro doch sehen will: Einfach weiterlaufen lassen oder mit **Zurück** das Popup schließen.
-
-2. **Manueller 1-Klick-Introsprung im OSD (Button ⏩):**
-   * Falls für eine sehr neue oder seltene Serie noch keine Online-Timestamps vorliegen, drückst du einfach **Steuerkreuz Oben (▲)** und wählst den neuen Button **`⏩`**.
-   * Das System springt automatisch um 85 Sekunden vorwärts (die durchschnittliche Standard-Dauer von Serienintros).
+* Beim Start einer Serienfolge gleicht das System die TMDb-ID, Staffel und Episode im Hintergrund mit **TheIntroDB** ab.
+* Nur wenn ein **gültiges Intro-Segment** für die Episode vorliegt (und exakt während dieses Intro-Zeitfensters), erscheint unten rechts der Button **`Intro skip`**.
+* **Kein automatisches Überspringen:** Das Intro läuft ganz normal weiter, bis du den Button aktiv mit der **Auswahltaste (Mitte / OK)** bestätigst.
+* Sobald du drückst, springt die Wiedergabe sekundengenau ans Ende des Intros.
+* Mit **Zurück** lässt sich der Button schließen; am Ende des Intro-Zeitfensters verschwindet er automatisch.
+* Gibt es für die Folge kein bekanntes Intro, wird kein Button eingeblendet.
