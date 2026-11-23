@@ -1,0 +1,18 @@
+<advancedsettings version="1.0">
+    <splash>false</splash>
+    <gui>
+        <algorithmdirtyregions>3</algorithmdirtyregions>
+        <!-- Keep false to prevent invisible dialogs when playback is paused -->
+        <smartredraw>false</smartredraw>
+    </gui>
+    <cache>
+        <buffermode>1</buffermode>
+        <memorysize>67108864</memorysize>
+        <readfactor>4.0</readfactor>
+    </cache>
+    <network>
+        <curlclienttimeout>10</curlclienttimeout>
+        <curllowspeedtime>10</curllowspeedtime>
+        <dnslookupcache>true</dnslookupcache>
+    </network>
+</advancedsettings>

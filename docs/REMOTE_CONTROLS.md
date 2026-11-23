@@ -8,13 +8,15 @@ Die Steuerung in diesem Setup wurde speziell an das intuitive Verhalten moderner
 
 | Taste | Aktion | Verhalten & Funktion |
 | :--- | :--- | :--- |
-| **Steuerkreuz Oben (▲)** | `OSD` | Blendet den **Zeitbalken (Timeline)**, Filmtitel, Spielzeit und Restlaufzeit ein. |
+| **Steuerkreuz Oben (▲)** | `OSD` | Blendet den **Zeitbalken (Timeline)** mit echtem Filmtitel / Staffel & Folge ein. Blendet sich nach 5 Sek. Inaktivität **automatisch wieder aus**. |
 | **Steuerkreuz Unten (▼)** | `Playlist Drawer` | Öffnet die **Staffel-Episoden-Schublade (Playlist)** direkt im Player (wie bei Prime Video) zum schnellen Folgenwechsel. |
 | **Steuerkreuz Links (◄)** | `StepBack` | Spult präzise **10 Sekunden zurück**. |
 | **Steuerkreuz Rechts (►)** | `StepForward` | Spult präzise **10 Sekunden vor**. |
 | **Auswahltaste (Mitte)** | `PlayPause` | Hält die Wiedergabe an (**Pause**) bzw. setzt sie fort (**Play**). |
 | **Zurück-Taste (Back)** | `Close` / `Back` | Schließt die OSD-Infoanzeige bzw. die Episodenschublade, stoppt das Video bei wiederholtem Drücken. |
 | **OSD-Button 🔄** | `Change Stream` | Öffnet mitten im Video den **Stream-Auswahldialog** (VAVOO Mirrors, VOE, Filemoon etc.) und setzt die Wiedergabe nahtlos an der aktuellen Sekunde fort. |
+| **OSD-Button 🌙** | `Night Mode` | **Nachtmodus / Dialog-Booster:** Schaltet +10 dB Dynamikkompression ein (hebt leise Stimmen an und dämpft laute Explosionen). |
+| **OSD-Button ⏩** | `Skip Intro` | **Intro überspringen:** Springt zum Ende des Intros (TheIntroDB Online-Erkennung oder +85 Sek. Standard-Introsprung). |
 
 ---
 

@@ -49,6 +49,9 @@ class PlayItem:
                 self.state.current_tv_show_id = current_episode.get('tvshowid')
                 self.state.played_in_a_row = 1
             source = 'addon' if not position else 'playlist'
+            if not episode and position:
+                episode = self.api.get_next_in_playlist(position)
+                source = 'playlist'
 
         # Next video from non-addon playlist
         elif position:

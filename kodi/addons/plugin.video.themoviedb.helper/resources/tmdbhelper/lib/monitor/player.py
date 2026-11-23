@@ -214,6 +214,9 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
     def onPlayBackStopped(self):
         self.scrobbler_stop()
         self.reset_properties()
+        from xbmcgui import Window
+        Window(10000).clearProperty("Intro_StartTime")
+        Window(10000).clearProperty("Intro_EndTime")
 
     def onPlayBackPaused(self):
         self.scrobbler_pause()
@@ -464,10 +467,22 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
         if self.dbtype:
             self.set_property('playing.dbtype', self.dbtype)
 
+        self.queue_autoplay_episodes()
+        self._apply_nightmode_if_active()
+
         # Start the selected scrobblers after any resume seek.
         self.wait_for_seek(10)
         self.scrobbler_start()
-        self.queue_autoplay_episodes()
+
+    def _apply_nightmode_if_active(self):
+        try:
+            from xbmcgui import Window
+            from xbmc import executebuiltin
+            if Window(10000).getProperty("NightMode_Active") == "true":
+                for _ in range(10):
+                    executebuiltin("Action(volampup)")
+        except Exception:
+            pass
 
     def queue_autoplay_episodes(self):
         if self.dbtype != 'episode':
@@ -479,8 +494,13 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
 
     def _queue_episodes_worker(self, tmdb_id, season, episode):
         from xbmc import PlayList, PLAYLIST_VIDEO, Monitor
+        from xbmcgui import Window
+        from tmdbhelper.lib.addon.thread import SafeThread
+        Window(10000).clearProperty("Intro_StartTime")
+        Window(10000).clearProperty("Intro_EndTime")
+        SafeThread(target=self._fetch_intro_segments, args=(tmdb_id, season, episode)).start()
         m = Monitor()
-        m.waitForAbort(2)
+        m.waitForAbort(1)
         if m.abortRequested() or not self.isPlayingVideo():
             return
         playlist = PlayList(PLAYLIST_VIDEO)
@@ -504,5 +524,41 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
         try:
             from xbmc import executebuiltin
             executebuiltin(f"RunPlugin(plugin://script.module.xstreamscraper/?id={tmdb_id}&season={season}&episode={int(episode)+1}&preload=true)")
+        except Exception:
+            pass
+
+    def _fetch_intro_segments(self, tmdb_id, season, episode):
+        import urllib.request, json, base64
+        from xbmc import executeJSONRPC
+        from xbmcgui import Window
+        try:
+            url = f"https://api.theintrodb.org/v4/media?tmdb_id={tmdb_id}&season={season}&episode={episode}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Kodi-TMDbHelper/6.0'})
+            with urllib.request.urlopen(req, timeout=3.5) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+            intro = data.get('intro', [])
+            if intro and intro[0].get('start_ms') is not None and intro[0].get('end_ms') is not None:
+                start_sec = float(intro[0]['start_ms']) / 1000.0
+                end_sec = float(intro[0]['end_ms']) / 1000.0
+                Window(10000).setProperty("Intro_StartTime", str(start_sec))
+                Window(10000).setProperty("Intro_EndTime", str(end_sec))
+
+                payload = {
+                    'skip_segments': [
+                        {'kind': 'intro', 'start': start_sec, 'end': end_sec}
+                    ]
+                }
+                b64 = base64.b64encode(json.dumps(payload).encode('utf-8')).decode('ascii')
+                rpc = {
+                    'jsonrpc': '2.0',
+                    'method': 'JSONRPC.NotifyAll',
+                    'params': {
+                        'sender': 'plugin.video.themoviedb.helper.SIGNAL',
+                        'message': 'Other.upnext_data',
+                        'data': [b64]
+                    },
+                    'id': 1
+                }
+                executeJSONRPC(json.dumps(rpc))
         except Exception:
             pass

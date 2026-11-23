@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window type="dialog" id="1140">
     <zorder>0</zorder>
-    <defaultcontrol always="true">7000</defaultcontrol>
+    <defaultcontrol always="true">7009</defaultcontrol>
     <onload>CancelAlarm(osd_timeout,true)</onload>
+    <onload condition="!$EXP[Exp_OSD_HasPlaylist]">Dialog.Close(1140,true)</onload>
+    <onload condition="!$EXP[Exp_OSD_HasPlaylist]">ActivateWindow(1141)</onload>
     <include>Animation_OSD_Dialog_WindowChange</include>
     <controls>
 
@@ -25,27 +27,38 @@
                 </include>
 
                 <!-- Episodes List -->
-                <include content="List_Landscape_Row">
-                    <param name="orientation">horizontal</param>
-                    <param name="control">fixedlist</param>
-                    <param name="id">7000</param>
-                    <include content="Object_ContentDynamic" condition="VideoPlayer.Content(livetv)">
-                        <param name="sortby">lastplayed</param>
-                        <param name="sortorder">descending</param>
-                        <param name="content">pvr://channels/tv/*</param>
+                <control type="group" id="7009">
+                    <include content="List_Landscape_Row">
+                        <param name="orientation">horizontal</param>
+                        <param name="control">fixedlist</param>
+                        <param name="id">7000</param>
+                        <include content="Object_ContentDynamic" condition="VideoPlayer.Content(livetv)">
+                            <param name="sortby">lastplayed</param>
+                            <param name="sortorder">descending</param>
+                            <param name="content">pvr://channels/tv/*</param>
+                        </include>
+                        <include content="Object_ContentDynamic" condition="!VideoPlayer.Content(livetv)">
+                            <param name="content">$VAR[Path_OSD_Episodes]</param>
+                        </include>
+                        <include>OSD_List_Dimensions</include>
+                        <onup>Close</onup>
+                        <ondown>ActivateWindow($VAR[Action_OSD_1140_OnDown])</ondown>
+                        <onfocus>SetProperty(TMDbHelper.WidgetContainer,7000,1140)</onfocus>
+                        <onunfocus>ClearProperty(TMDbHelper.WidgetContainer,1140)</onunfocus>
+                        <include content="Animation_ConditionalFade">
+                            <param name="condition">Container(7000).IsUpdating</param>
+                        </include>
                     </include>
-                    <include content="Object_ContentDynamic" condition="!VideoPlayer.Content(livetv)">
-                        <param name="content">$VAR[Path_OSD_Episodes]</param>
+                    <include content="Object_Hidden_Button">
+                        <param name="id">7001</param>
+                        <visible>Integer.IsEqual(Container(7000).NumItems,0)</visible>
+                        <onup>Close</onup>
+                        <ondown>ActivateWindow($VAR[Action_OSD_1140_OnDown])</ondown>
+                        <onleft>Close</onleft>
+                        <onright>Close</onright>
+                        <onclick>Close</onclick>
                     </include>
-                    <include>OSD_List_Dimensions</include>
-                    <onup>Close</onup>
-                    <ondown>ActivateWindow($VAR[Action_OSD_1140_OnDown])</ondown>
-                    <onfocus>SetProperty(TMDbHelper.WidgetContainer,7000,1140)</onfocus>
-                    <onunfocus>ClearProperty(TMDbHelper.WidgetContainer,1140)</onunfocus>
-                    <include content="Animation_ConditionalFade">
-                        <param name="condition">Container(7000).IsUpdating</param>
-                    </include>
-                </include>
+                </control>
 
                 <!-- Playing Icon and Details -->
                 <include content="OSD_Info_Tray">

@@ -52,6 +52,16 @@ REQUEST_ERRORS = (ERR_UNREACHABLE, ERR_CLOUDFLARE, ERR_DDOS, ERR_TIMEOUT, ERR_UR
 # eigene Zuordnung, nach dem Abruf ist sie weg. Die IP kommt je Abruf frisch aus
 # __doh_request (bewusst kein Cache, siehe dort).
 _dohPins = threading.local()
+_dohCache = {}
+_dohCacheLock = threading.Lock()
+_DOH_CACHE_TTL = 300  # 5 Minuten In-Memory-Cache fuer aufgeloeste Domains
+_DOH_BYPASS_SKIP_HOSTS = ('api.themoviedb.org', 'image.tmdb.org', 'cloudflare-dns.com')
+
+
+def _invalidate_doh_cache(hostname):
+    if hostname:
+        with _dohCacheLock:
+            _dohCache.pop(hostname.lower(), None)
 
 
 def _dohPin(host):
@@ -534,6 +544,7 @@ class cRequestHandler:
                 logger.error(' -> [requestHandler]: HTTPError ' + str(e) + ' Url: ' + self._sUrl)
                 return ERR_UNREACHABLE
         except (socket.timeout, TimeoutError):
+            _invalidate_doh_cache(_doh_host)
             # Der Server hat die Verbindung angenommen und dann nicht geantwortet.
             # Seit Python 3.10 IST socket.timeout dasselbe wie TimeoutError und faellt
             # damit durch URLError/HTTPException hindurch — vorher flog der Fall als
@@ -552,6 +563,7 @@ class cRequestHandler:
             logger.error(' -> [requestHandler]: Timeout Url: ' + self._sUrl)
             return ERR_TIMEOUT
         except URLError as e:
+            _invalidate_doh_cache(_doh_host)
             # Die Verbindung kam gar nicht zustande. Ein Fall ist dabei eindeutig:
             # sagt der DNS "Name unbekannt" (gaierror -2 / WSAHOST_NOT_FOUND 11001),
             # existiert die Domain nicht mehr — das ist offline, nicht bloss gestoert.
@@ -567,11 +579,13 @@ class cRequestHandler:
             logger.error(' -> [requestHandler]: URLError ' + str(e.reason) + ' Url: ' + self._sUrl)
             return ERR_URL
         except HTTPException as e:
+            _invalidate_doh_cache(_doh_host)
             if not self.ignoreErrors and not _quietWindows:
                 xbmcgui.Dialog().ok('xStream', str(e))
             logger.error(' -> [requestHandler]: HTTPException ' + str(e) + ' Url: ' + self._sUrl)
             return ERR_TIMEOUT
         except OSError as e:
+            _invalidate_doh_cache(_doh_host)
             # Verbindung waehrend des Lesens weg (Reset, EOF) — kein URLError, sonst ungefangen
             if not self.ignoreErrors and not _quietWindows:
                 xbmcgui.Dialog().ok('xStream', str(e))
@@ -709,9 +723,14 @@ class cRequestHandler:
 
     def __doh_request(self, url, doh_server="https://cloudflare-dns.com/dns-query"):
         parsed_url = urlparse(url)
-        hostname = parsed_url.hostname
-        # Bewusst NICHT gecacht: DDoS-Guard-Edges rotieren, eine im RAM-Cache
-        # festgehaltene IP koennte innerhalb der TTL sterben -> immer frisch aufloesen.
+        hostname = (parsed_url.hostname or '').lower()
+        if not hostname or hostname in _DOH_BYPASS_SKIP_HOSTS:
+            return None
+        now = time.monotonic()
+        with _dohCacheLock:
+            cached = _dohCache.get(hostname)
+            if cached and (now - cached[1]) < _DOH_CACHE_TTL:
+                return cached[0]
         params = urlencode({"name": hostname, "type": "A"})
         doh_url = f"{doh_server}?{params}"
         req = Request(doh_url)
@@ -728,6 +747,8 @@ class cRequestHandler:
             ip_address = next((a["data"] for a in dns_response["Answer"] if a.get("type") == 1), None)
             if not ip_address:
                 raise Exception("No A record in DNS answer")
+            with _dohCacheLock:
+                _dohCache[hostname] = (ip_address, time.monotonic())
             return ip_address
         except Exception as e:
             logger.error(' -> [requestHandler]: DNS query failed: %s' % e)

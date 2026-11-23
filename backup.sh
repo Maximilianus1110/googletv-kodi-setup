@@ -32,4 +32,7 @@ adb -s "$DEVICE_ID" pull "$REMOTE_KODI_DIR/userdata/keymaps" "$BACKUP_DIR/" || t
 echo "Sichere Add-on-Einstellungen..."
 adb -s "$DEVICE_ID" pull "$REMOTE_KODI_DIR/userdata/addon_data" "$BACKUP_DIR/" || true
 
+echo "Sichere advancedsettings.xml..."
+adb -s "$DEVICE_ID" pull "$REMOTE_KODI_DIR/userdata/advancedsettings.xml" "$BACKUP_DIR/" || true
+
 echo "✓ Backup erfolgreich in $BACKUP_DIR abgeschlossen!"
