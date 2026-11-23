@@ -26,6 +26,27 @@
                 "widget_style": "Landscape"
             },
             {
+                "label": "📌 Meine Trakt Watchlist",
+                "icon": "special://skin/extras/icons/favourites2.png",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_watchlist&tmdb_type=both&widget=true",
+                "target": "videos",
+                "widget_style": "Poster"
+            },
+            {
+                "label": "💡 Filme für dich (Weil du geschaut hast)",
+                "icon": "special://skin/extras/icons/film.png",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trakt_becauseyouwatched&tmdb_type=movie&widget=true",
+                "target": "videos",
+                "widget_style": "Poster"
+            },
+            {
+                "label": "🎯 Serien für dich (Weil du geschaut hast)",
+                "icon": "special://skin/extras/icons/tv.png",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trakt_becauseyouwatched&tmdb_type=tv&widget=true",
+                "target": "videos",
+                "widget_style": "Poster"
+            },
+            {
                 "label": "⭐ Meine YouTube Vorschläge",
                 "icon": "special://skin/extras/icons/video.png",
                 "path": "plugin://plugin.video.youtube/special/recommendations/",

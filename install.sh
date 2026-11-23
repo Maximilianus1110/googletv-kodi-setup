@@ -17,6 +17,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KODI_PKG="org.xbmc.kodi"
 REMOTE_KODI_DIR="/sdcard/Android/data/org.xbmc.kodi/files/.kodi"
 
+# Prüfe Autostart-Flag (vor normalem Ablauf)
+if [[ "${1:-}" == "--autostart" ]]; then
+    shift
+    exec "$SCRIPT_DIR/autostart-kodi.sh" "$@"
+fi
+
 echo -e "${BLUE}================================================================${NC}"
 echo -e "${CYAN}🎬  Google TV & Android TV – Kodi Mediacenter Installer${NC}"
 echo -e "${BLUE}================================================================${NC}"
@@ -71,40 +77,99 @@ fi
 echo -e "Beende Kodi für eine saubere Dateiübertragung..."
 adb -s "$DEVICE_ID" shell "am force-stop $KODI_PKG" || true
 
-# 4. Backup des alten Setups erstellen
+# 4. Backup des alten Setups erstellen & bestehendes Trakt-Login auslesen
 echo -e "\n${YELLOW}[3/5] Erstelle Backup der bisherigen Kodi-Konfiguration auf dem Gerät...${NC}"
 BACKUP_DATE=$(date +%Y%m%d_%H%M%S)
 adb -s "$DEVICE_ID" shell "
+mkdir -p /sdcard/kodi_backup_${BACKUP_DATE}
 if [ -d $REMOTE_KODI_DIR/userdata/keymaps ]; then
-    mkdir -p /sdcard/kodi_backup_${BACKUP_DATE}
     cp -r $REMOTE_KODI_DIR/userdata/keymaps /sdcard/kodi_backup_${BACKUP_DATE}/ 2>/dev/null || true
+fi
+if [ -d $REMOTE_KODI_DIR/userdata/addon_data ]; then
+    cp -r $REMOTE_KODI_DIR/userdata/addon_data /sdcard/kodi_backup_${BACKUP_DATE}/ 2>/dev/null || true
+fi
+if [ -f $REMOTE_KODI_DIR/userdata/advancedsettings.xml ]; then
+    cp $REMOTE_KODI_DIR/userdata/advancedsettings.xml /sdcard/kodi_backup_${BACKUP_DATE}/ 2>/dev/null || true
 fi
 "
 echo -e "${GREEN}✓ Sicherung abgelegt in: /sdcard/kodi_backup_${BACKUP_DATE}${NC}"
 
+EXISTING_TRAKT_TOKEN=$(adb -s "$DEVICE_ID" shell "sed -n 's/.*<setting id=\"trakt_token\"[^>]*>\(.*\)<\/setting>.*/\1/p' $REMOTE_KODI_DIR/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml 2>/dev/null" | tr -d '\r' || true)
+
 # 5. Dateien übertragen
 echo -e "\n${YELLOW}[4/5] Übertrage optimierte Add-ons, Skin & Konfigurationen...${NC}"
-STAGE_DIR="/sdcard/Download/kodi_setup_stage"
-adb -s "$DEVICE_ID" shell "rm -rf $STAGE_DIR && mkdir -p $STAGE_DIR/addons $STAGE_DIR/userdata/keymaps $STAGE_DIR/userdata/addon_data"
+TRANSFER_OK=false
+if command -v tar &>/dev/null && adb -s "$DEVICE_ID" shell "command -v tar" &>/dev/null; then
+    echo -e "-> Übertrage gebündeltes Setup via tar-Archiv (deutlich schneller über WLAN/USB)..."
+    TMP_TAR=$(mktemp -t kodi_setup_bundle.XXXXXX)
+    if tar --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' -cf "$TMP_TAR" -C "$SCRIPT_DIR/kodi" addons userdata &&
+       adb -s "$DEVICE_ID" push "$TMP_TAR" "/sdcard/Download/kodi_setup_bundle.tar" &&
+       adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR && tar -xf /sdcard/Download/kodi_setup_bundle.tar -C $REMOTE_KODI_DIR && rm -f /sdcard/Download/kodi_setup_bundle.tar"; then
+        TRANSFER_OK=true
+    else
+        echo -e "${YELLOW}Hinweis: tar-Übertragung fehlgeschlagen, wechsle auf Standard-Übertragung...${NC}"
+        adb -s "$DEVICE_ID" shell "rm -f /sdcard/Download/kodi_setup_bundle.tar" || true
+    fi
+    rm -f "$TMP_TAR"
+fi
 
-echo -e "-> Übertrage Fernbedienungs-Keymaps (player_controls.xml, secret_remote.xml)..."
-adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "$STAGE_DIR/userdata/keymaps/"
+if [ "$TRANSFER_OK" != "true" ]; then
+    STAGE_DIR="/sdcard/Download/kodi_setup_stage"
+    adb -s "$DEVICE_ID" shell "rm -rf $STAGE_DIR && mkdir -p $STAGE_DIR/addons $STAGE_DIR/userdata/keymaps $STAGE_DIR/userdata/addon_data"
 
-echo -e "-> Übertrage Addon-Einstellungen (TMDb Helper, xStream, Scraper, UpNext)..."
-adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/addon_data/"* "$STAGE_DIR/userdata/addon_data/"
+    echo -e "-> Übertrage Fernbedienungs-Keymaps (player_controls.xml, secret_remote.xml)..."
+    adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "$STAGE_DIR/userdata/keymaps/"
 
-echo -e "-> Übertrage gepatchte Add-ons & Arctic Fuse 2 Skin (ca. 120 MB, bitte kurz warten)..."
-adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/addons/"* "$STAGE_DIR/addons/"
+    echo -e "-> Übertrage Addon-Einstellungen (TMDb Helper, xStream, Scraper, UpNext)..."
+    adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/addon_data/"* "$STAGE_DIR/userdata/addon_data/"
 
-echo -e "-> Installiere Dateien im Kodi-Hauptverzeichnis..."
-adb -s "$DEVICE_ID" shell "
+    if [ -f "$SCRIPT_DIR/kodi/userdata/advancedsettings.xml" ]; then
+        echo -e "-> Übertrage Performance-Einstellungen (advancedsettings.xml)..."
+        adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/advancedsettings.xml" "$STAGE_DIR/userdata/"
+    fi
+
+    echo -e "-> Übertrage gepatchte Add-ons & Arctic Fuse 2 Skin (ca. 120 MB, bitte kurz warten)..."
+    adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/addons/"* "$STAGE_DIR/addons/"
+
+    echo -e "-> Installiere Dateien im Kodi-Hauptverzeichnis..."
+    adb -s "$DEVICE_ID" shell "
 mkdir -p $REMOTE_KODI_DIR/addons $REMOTE_KODI_DIR/userdata/keymaps $REMOTE_KODI_DIR/userdata/addon_data
 cp -rf $STAGE_DIR/* $REMOTE_KODI_DIR/
 rm -rf $STAGE_DIR
 "
+fi
 
-# 6. Kodi neu starten
-echo -e "\n${YELLOW}[5/5] Starte Kodi neu...${NC}"
+if [ -n "$EXISTING_TRAKT_TOKEN" ]; then
+    echo -e "-> Stelle vorhandenes Trakt-Login auf der Box wieder her..."
+    TMP_TMDB_SETTINGS=$(mktemp -t kodi_tmdb_settings.XXXXXX)
+    if command -v python3 &>/dev/null; then
+        EXISTING_TRAKT_TOKEN="$EXISTING_TRAKT_TOKEN" python3 -c '
+import os, re, sys
+token = os.environ["EXISTING_TRAKT_TOKEN"]
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    content = f.read()
+replacement = f"<setting id=\"trakt_token\">{token}</setting>"
+content = re.sub(r"<setting id=\"trakt_token\"[^>]*(?:/>|>.*?</setting>)", lambda _: replacement, content)
+with open(sys.argv[2], "w", encoding="utf-8") as f:
+    f.write(content)
+' "$SCRIPT_DIR/kodi/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml" "$TMP_TMDB_SETTINGS"
+    else
+        ESCAPED_TOKEN=$(printf '%s\n' "$EXISTING_TRAKT_TOKEN" | sed 's/[&/|\\]/\\&/g')
+        sed "s|<setting id=\"trakt_token\"[^>]*/>|<setting id=\"trakt_token\">${ESCAPED_TOKEN}</setting>|g; s|<setting id=\"trakt_token\"[^>]*>.*</setting>|<setting id=\"trakt_token\">${ESCAPED_TOKEN}</setting>|g" \
+            "$SCRIPT_DIR/kodi/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml" > "$TMP_TMDB_SETTINGS"
+    fi
+    adb -s "$DEVICE_ID" push "$TMP_TMDB_SETTINGS" "/sdcard/Download/kodi_tmdb_settings.xml" >/dev/null
+    adb -s "$DEVICE_ID" shell "cp -f /sdcard/Download/kodi_tmdb_settings.xml $REMOTE_KODI_DIR/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml && rm -f /sdcard/Download/kodi_tmdb_settings.xml"
+    rm -f "$TMP_TMDB_SETTINGS"
+    echo -e "${GREEN}✓ Bestehender Trakt-Token wurde übernommen!${NC}"
+fi
+
+# 6. Standby Keep-Alive setzen & Kodi neu starten
+echo -e "\n${YELLOW}[5/5] Aktiviere Standby Keep-Alive & starte Kodi neu...${NC}"
+adb -s "$DEVICE_ID" shell "dumpsys deviceidle whitelist +$KODI_PKG" >/dev/null 2>&1 || true
+adb -s "$DEVICE_ID" shell "cmd appops set $KODI_PKG RUN_IN_BACKGROUND allow" >/dev/null 2>&1 || true
+adb -s "$DEVICE_ID" shell "cmd appops set $KODI_PKG RUN_ANY_IN_BACKGROUND allow" >/dev/null 2>&1 || true
+adb -s "$DEVICE_ID" shell "cmd appops set $KODI_PKG SYSTEM_ALERT_WINDOW allow" >/dev/null 2>&1 || true
 adb -s "$DEVICE_ID" shell "am start -n $KODI_PKG/.Main"
 
 echo -e "\n${GREEN}================================================================${NC}"

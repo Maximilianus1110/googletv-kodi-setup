@@ -467,10 +467,22 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
         if self.dbtype:
             self.set_property('playing.dbtype', self.dbtype)
 
+        self.queue_autoplay_episodes()
+        self._apply_nightmode_if_active()
+
         # Start the selected scrobblers after any resume seek.
         self.wait_for_seek(10)
         self.scrobbler_start()
-        self.queue_autoplay_episodes()
+
+    def _apply_nightmode_if_active(self):
+        try:
+            from xbmcgui import Window
+            from xbmc import executebuiltin
+            if Window(10000).getProperty("NightMode_Active") == "true":
+                for _ in range(10):
+                    executebuiltin("Action(volampup)")
+        except Exception:
+            pass
 
     def queue_autoplay_episodes(self):
         if self.dbtype != 'episode':
@@ -482,10 +494,13 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
 
     def _queue_episodes_worker(self, tmdb_id, season, episode):
         from xbmc import PlayList, PLAYLIST_VIDEO, Monitor
+        from xbmcgui import Window
         from tmdbhelper.lib.addon.thread import SafeThread
+        Window(10000).clearProperty("Intro_StartTime")
+        Window(10000).clearProperty("Intro_EndTime")
         SafeThread(target=self._fetch_intro_segments, args=(tmdb_id, season, episode)).start()
         m = Monitor()
-        m.waitForAbort(2)
+        m.waitForAbort(1)
         if m.abortRequested() or not self.isPlayingVideo():
             return
         playlist = PlayList(PLAYLIST_VIDEO)

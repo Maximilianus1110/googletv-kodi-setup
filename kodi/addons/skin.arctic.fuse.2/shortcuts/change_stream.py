@@ -37,7 +37,8 @@ else:
     if not _id:
         xbmcgui.Dialog().notification("Stream wechseln", "TMDb-ID nicht gefunden", xbmcgui.NOTIFICATION_WARNING)
     else:
-        # Pause playback while dialog is open
+        # Close OSD and pause playback while dialog is open
+        xbmc.executebuiltin("Dialog.Close(videoosd,true)")
         if not xbmc.getCondVisibility("Player.Paused"):
             player.pause()
         if _type == "tv":

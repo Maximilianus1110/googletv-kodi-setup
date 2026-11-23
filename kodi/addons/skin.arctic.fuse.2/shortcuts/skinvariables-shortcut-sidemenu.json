@@ -20,6 +20,27 @@
                 "guid": "guid-ondeck-01"
             },
             {
+                "label": "📌 Meine Trakt Watchlist",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_watchlist&tmdb_type=both&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-trakt-watchlist-01"
+            },
+            {
+                "label": "💡 Filme für dich (Weil du geschaut hast)",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trakt_becauseyouwatched&tmdb_type=movie&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-trakt-byw-movie-01"
+            },
+            {
+                "label": "🎯 Serien für dich (Weil du geschaut hast)",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trakt_becauseyouwatched&tmdb_type=tv&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-trakt-byw-tv-01"
+            },
+            {
                 "label": "⭐ Meine YouTube Vorschläge",
                 "path": "plugin://plugin.video.youtube/special/recommendations/",
                 "widget_style": "Landscape",
@@ -56,6 +77,20 @@
         "path": "ActivateWindow(videos,plugin://plugin.video.themoviedb.helper/?info=dir_movie,return)",
         "target": "",
         "widgets": [
+            {
+                "label": "📌 Meine Film-Watchlist",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_watchlist&tmdb_type=movie&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-trakt-watchlist-movie"
+            },
+            {
+                "label": "💡 Empfohlen (Weil du geschaut hast)",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trakt_becauseyouwatched&tmdb_type=movie&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-trakt-byw-movie-hub"
+            },
             {
                 "label": "🔥 Filme im Trend",
                 "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie&widget=true",
@@ -97,6 +132,20 @@
         "path": "ActivateWindow(videos,plugin://plugin.video.themoviedb.helper/?info=dir_tv,return)",
         "target": "",
         "widgets": [
+            {
+                "label": "📌 Meine Serien-Watchlist",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=sync_watchlist&tmdb_type=tv&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-trakt-watchlist-tv"
+            },
+            {
+                "label": "🎯 Empfohlen (Weil du geschaut hast)",
+                "path": "plugin://plugin.video.themoviedb.helper/?info=trakt_becauseyouwatched&tmdb_type=tv&widget=true",
+                "widget_style": "Poster",
+                "target": "videos",
+                "guid": "guid-trakt-byw-tv-hub"
+            },
             {
                 "label": "🔥 Serien im Trend",
                 "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=tv&widget=true",

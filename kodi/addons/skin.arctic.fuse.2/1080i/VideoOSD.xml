@@ -27,7 +27,7 @@
                         <left>-20</left>
                         <orientation>horizontal</orientation>
                         <itemgap>osd_itemgap</itemgap>
-                        <onleft>6008</onleft>
+                        <onleft>6011</onleft>
                         <onright>6005</onright>
                         <ondown>ActivateWindow($VAR[Action_OSD_Main_OnDown])</ondown>
 
@@ -37,6 +37,8 @@
                             <onclick>PlayerControl(Play)</onclick>
                             <onfocus condition="Player.Forwarding | Player.Rewinding">PlayerControl(Play)</onfocus>
                             <onunfocus condition="Player.Forwarding | Player.Rewinding">PlayerControl(Play)</onunfocus>
+                            <onleft condition="!VideoPlayer.Content(livetv)">6011</onleft>
+                            <onleft condition="VideoPlayer.Content(livetv)">6010</onleft>
                             <onup>8200</onup>
                         </control>
                         <include content="OSD_Button_Icon_Overlay">
@@ -186,12 +188,13 @@
                         <control type="button" id="6009">
                             <include>Defs_OSD_Button</include>
                             <onclick>CancelAlarm(osd_timeout,true)</onclick>
+                            <onclick>Dialog.Close(videoosd)</onclick>
                             <onclick>RunScript(special://skin/shortcuts/change_stream.py)</onclick>
                             <onup>8200</onup>
                             <visible>!VideoPlayer.Content(livetv)</visible>
                         </control>
                         <include content="OSD_Button_Icon_Overlay" condition="!VideoPlayer.Content(livetv)">
-                            <param name="icon">special://skin/extras/icons/refresh.png</param>
+                            <param name="icon">special://skin/extras/icons/arrows-rotate.png</param>
                             <param name="id">6009</param>
                             <param name="groupid">6109</param>
                             <param name="itemgap">osd_itemgap</param>
@@ -257,6 +260,7 @@
                         <visible>Pvr.IsPlayingTv</visible>
                     </control>
                     <control type="slider" id="8200">
+                        <include>Action_OSD_Button</include>
                         <info>Player.Progress</info>
                         <action>seek</action>
                         <texturesliderbar />

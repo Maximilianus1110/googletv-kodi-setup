@@ -26,19 +26,24 @@ In diesem Setup sind erweiterte Streaming-Features integriert, die das Seriensch
 
 ---
 
-## 3. 🎯 Manuelle Stream- / Hoster-Auswahl (Optional)
+## 3. 🎯 Smarter Stream- / Hoster-Wechsler (Qualität & Speed)
 
-Standardmäßig wählt xStream Scraper vollautomatisch den schnellsten, stabilsten Stream aus. Wenn ein Stream einmal schlechte Bildqualität hat oder ruckelt, hast du zwei komfortable Möglichkeiten, manuell eine andere Quelle zu wählen:
+Standardmäßig wählt xStream Scraper vollautomatisch den schnellsten, stabilsten Stream aus. Wenn ein Stream einmal schlechte Bildqualität hat oder ruckelt, hast du zwei komfortable Möglichkeiten, manuell eine andere Quelle mit **Qualitäts- und Geschwindigkeitsanzeige** zu wählen:
+
+### Was dir die Liste direkt anzeigt:
+* **Ampel-Symbol:** `🟢` schneller/geprüfter Stream (< 280 ms), `🟡` normaler/unbekannter Ping, `🔴` langsam (> 650 ms) oder zuletzt fehlerhaft.
+* **Hoster, Qualität & Ping:** z. B. `🟢 1. [VOE • HD • 85ms] Serienstream (DE)` oder nach Prüfung `🟢 ✅ 1. [Filemoon • 1080p • 140ms] Kinoger [Geprüft]`.
+* **Live-Speedtest (Eintrag 0):** Über **`⚡ [Live-Speedtest: Top-5 Streams auflösen & echte Auflösung messen]`** werden die besten 5 Kandidaten direkt vorab aufgelöst, auf tatsächliche Video-Daten geprüft und mit ihrer **echten Auflösung** (`4K`, `1080p`, `720p`) sowie realen Antwortzeit ganz nach oben sortiert.
 
 ### Option A: Mitten im Video wechseln (In-Player)
 1. **Steuerkreuz Oben (▲)** drücken, um die Timeline / das OSD einzublenden.
 2. In der unteren Steuerungsleiste ganz nach rechts auf das **🔄-Symbol** ("Stream / Quelle wechseln") navigieren und auswählen.
-3. Das Video pausiert und ein Dialog listet alle gefundenen Streams auf (z. B. *[VAVOO]*, *[VOE]*, *[Streamtape]*, *[Filemoon]*).
-4. Quelle auswählen -> Der Stream wird getestet und das Video setzt **an der exakten Sekunde** fort.
+3. Das Video pausiert und ein sortierter Dialog listet alle gefundenen Streams mit Ampel, Qualität & Ping auf.
+4. Optional **⚡ Live-Speedtest** wählen oder direkt eine Quelle anklicken -> Der Stream wird geprüft und das Video setzt **an der exakten Sekunde** fort.
 
 ### Option B: Bereits vor dem Start auswählen
 1. In den Startseiten-Widgets oder Serienübersichten auf die gewünschte Folge navigieren.
 2. Die **Auswahltaste lange gedrückt halten** (Kontextmenü öffnen).
 3. **„Abspielen mit...“** wählen.
 4. **„xStream Scraper (Quelle manuell wählen)“** auswählen.
-5. Die Liste der Hoster öffnet sich direkt vor dem Abspielen.
+5. Die sortierte Liste der Hoster öffnet sich direkt vor dem Abspielen.

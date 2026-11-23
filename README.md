@@ -19,16 +19,17 @@ Dieses Setup verwandelt dein Kodi in ein blitzschnelles, modernes Mediacenter im
 * ⚡ **Intelligenter Multi-Source Stream-Scraper:**
   * Ein Klick auf ein Film-/Serien-Poster genügt: xStream Scraper durchsucht automatisch 14 deutsche Streaming-Anbieter & VAVOO-Mirrors.
   * Automatischer Vorab-Test (max. 10 s): Fehlerhafte oder tote Streams werden übersprungen, der beste funktionierende Stream startet sofort.
-* ▶️ **„Weiterschauen“ & „Nächste Episoden“ (Trakt.tv Sync):**
+* ▶️ **„Weiterschauen“, Watchlist & Personalisierte Trakt-Reihen:**
   * Angefangene Filme und Serienfolgen erscheinen direkt mit Fortschrittsbalken auf der Startseite.
+  * Deine persönliche **Trakt Watchlist** sowie **„Empfohlen (Weil du X geschaut hast)“**-Reihen direkt unter Entdecken, Filme & Serien.
   * Beendete Folgen schalten automatisch die nächste Episode frei.
 * ⏩ **Nahtloses Autoplay & Hintergrund-Vorabladen (Preloading):**
   * Nächste Episoden werden wie bei Netflix/Prime Video automatisch abgespielt.
   * Hintergrund-Preloading (8 Sekunden nach Start): Der Stream für Folge N+1 wird bereits im RAM gecacht – 0 Sekunden Wartezeit beim Episodenwechsel!
   * Eingebauter UpNext-Countdown 15 Sekunden vor Episodenende.
-* 📺 **In-Player Episoden-Schublade & Stream-Auswahl:**
+* 📺 **In-Player Episoden-Schublade & Smarter Stream-Wechsler:**
   * **Steuerkreuz Unten (▼):** Öffnet direkt im laufenden Video die **Staffel-Episoden-Schublade** (wie bei Prime Video) zum schnellen Folgenwechsel.
-  * **OSD-Button 🔄:** Mitten im Video alternative Hoster/Streams auswählen (bei schlechter Videoqualität) und an exakt derselben Sekunde fortsetzen.
+  * **OSD-Button 🔄:** Mitten im Video alternative Hoster/Streams mit **Qualitäts- & Speed-Ampel** (`🟢/🟡/🔴`, Auflösung, Ping in `ms` + optionalem **Live-Speedtest** der Top-5) auswählen und an exakt derselben Sekunde fortsetzen.
   * Optional auch vor dem Abspielen über das Kontextmenü (*Abspielen mit...* -> *Quelle manuell wählen*).
 * 🌙 **Nachtmodus / Dialog-Booster (DRC):**
   * Per 1-Klick (OSD-Button 🌙) schaltet Kodi eine +10 dB Dynamikkompression ein: Leise Stimmen werden verständlich und laut, laute Explosionen sanft gedämpft.
@@ -86,7 +87,8 @@ Alle Spezialbereiche sind detailliert im Ordner [`docs/`](docs/) beschrieben:
 
 * 🎮 [**Fernbedienungs-Belegung & Gesten**](docs/REMOTE_CONTROLS.md): Detaillierte Übersicht aller Tastenfunktionen während der Wiedergabe und im Hauptmenü.
 * 🌙 [**Nachtmodus, Intro-Skip & Timeline**](docs/NIGHTMODE_AND_INTROS_GUIDE.md): Dialog-Verstärkung, Intro-Erkennung via TheIntroDB und automatische Timeline-Ausblendung.
-* ⏩ [**Autoplay, Episodenschublade & Stream-Auswahl**](docs/AUTOPLAY_AND_STREAM_SELECT.md): Nahtlose Wiedergabe, Vorabladen im Hintergrund, Prime-Video-Episodenauswahl & Quellenwechsler.
+* ⏩ [**Autoplay, Episodenschublade & Stream-Auswahl**](docs/AUTOPLAY_AND_STREAM_SELECT.md): Nahtlose Wiedergabe, Vorabladen im Hintergrund, Prime-Video-Episodenauswahl & smarter Quellenwechsler.
+* 🚀 [**Kodi Autostart & Google TV Launcher ersetzen**](docs/ANDROID_TV_AUTOSTART.md): Warum Google-TV-Vorschläge andere Apps öffnen und wie Kodi zur direkten Standard-Ansicht wird.
 * 🎬 [**Trakt-Einrichtung („Weiterschauen“)**](docs/TRAKT_SETUP.md): Wie du dein kostenloses Trakt-Konto mit Kodi verbindest und den Netflix-Fortschrittsbalken aktivierst.
 * 📺 [**YouTube-Login & Startseite**](docs/YOUTUBE_SETUP.md): Google TV Geräte-Login ohne Sicherheitswarnung und Personalisierung deiner Empfehlungen.
 * 🔒 [**Erwachsenenbereich (+18)**](docs/ADULT_SETUP.md): Alles zum PIN-Code `0000`, der 5-Minuten-Sitzungsverwaltung und der Tarnung.
@@ -117,6 +119,9 @@ Alle Spezialbereiche sind detailliert im Ordner [`docs/`](docs/) beschrieben:
 ```bash
 # Nur die Tastenbelegung neu übertragen
 ./install.sh --keymaps-only
+
+# Kodi Autostart / Standby Keep-Alive / Launcher-Manager starten
+./autostart-kodi.sh
 
 # Ein lokales Backup des aktuellen Kodi-Stands auf den PC ziehen
 ./backup.sh
