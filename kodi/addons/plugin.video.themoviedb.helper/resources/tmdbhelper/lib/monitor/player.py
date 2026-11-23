@@ -529,25 +529,59 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
 
     def _fetch_intro_segments(self, tmdb_id, season, episode):
         import urllib.request, json, base64
-        from xbmc import executeJSONRPC
+        from xbmc import executeJSONRPC, log as xbmc_log, LOGINFO
         from xbmcgui import Window
         try:
             url = f"https://api.theintrodb.org/v4/media?tmdb_id={tmdb_id}&season={season}&episode={episode}"
             req = urllib.request.Request(url, headers={'User-Agent': 'Kodi-TMDbHelper/6.0'})
-            with urllib.request.urlopen(req, timeout=3.5) as resp:
+            with urllib.request.urlopen(req, timeout=4.0) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
-            intro = data.get('intro', [])
-            if intro and intro[0].get('start_ms') is not None and intro[0].get('end_ms') is not None:
-                start_sec = float(intro[0]['start_ms']) / 1000.0
-                end_sec = float(intro[0]['end_ms']) / 1000.0
-                Window(10000).setProperty("Intro_StartTime", str(start_sec))
-                Window(10000).setProperty("Intro_EndTime", str(end_sec))
 
-                payload = {
-                    'skip_segments': [
-                        {'kind': 'intro', 'start': start_sec, 'end': end_sec}
-                    ]
-                }
+            skip_segments = []
+            intro_set = False
+            for kind in ('intro', 'recap'):
+                for seg in (data.get(kind) or []):
+                    if not isinstance(seg, dict):
+                        continue
+                    end_ms = seg.get('end_ms')
+                    if end_ms is None:
+                        continue
+                    start_ms = seg.get('start_ms')
+                    if start_ms is None:
+                        start_ms = 0
+                    try:
+                        start_sec = float(start_ms) / 1000.0
+                        end_sec = float(end_ms) / 1000.0
+                    except (TypeError, ValueError):
+                        continue
+                    if end_sec > start_sec >= 0.0:
+                        skip_segments.append({'kind': kind, 'start': start_sec, 'end': end_sec})
+                        if kind == 'intro' and not intro_set:
+                            Window(10000).setProperty("Intro_StartTime", str(start_sec))
+                            Window(10000).setProperty("Intro_EndTime", str(end_sec))
+                            intro_set = True
+
+            payload = {}
+            if skip_segments:
+                payload['skip_segments'] = skip_segments
+
+            for seg in (data.get('credits') or []):
+                if not isinstance(seg, dict):
+                    continue
+                start_ms = seg.get('start_ms')
+                if start_ms is not None:
+                    try:
+                        credits_ms = float(start_ms)
+                    except (TypeError, ValueError):
+                        continue
+                    if credits_ms > 60000:
+                        credits_start = credits_ms / 1000.0
+                        total_time = self.getTotalTime() if self.isPlayingVideo() else 0
+                        if total_time > 0 and (total_time * 0.70) <= credits_start < (total_time - 5.0):
+                            payload['notification_offset'] = int(credits_start)
+                        break
+
+            if payload:
                 b64 = base64.b64encode(json.dumps(payload).encode('utf-8')).decode('ascii')
                 rpc = {
                     'jsonrpc': '2.0',
@@ -560,5 +594,6 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
                     'id': 1
                 }
                 executeJSONRPC(json.dumps(rpc))
-        except Exception:
-            pass
+                xbmc_log(f"[IntroSkip] Sent segments for tmdb={tmdb_id} S{season}E{episode}: {payload}", LOGINFO)
+        except Exception as e:
+            xbmc_log(f"[IntroSkip] Lookup failed for tmdb={tmdb_id} S{season}E{episode}: {e}", LOGINFO)

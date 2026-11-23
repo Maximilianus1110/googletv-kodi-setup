@@ -39,13 +39,12 @@ Dieses Setup verwandelt dein Kodi in ein blitzschnelles, modernes Mediacenter im
 * ⏱️ **Timeline mit echtem Serientitel & 5s Auto-Hide:**
   * OSD zeigt nun vollständigen Serientitel, Staffel und Episodennummer statt nur „Es läuft“.
   * Timeline blendet sich nach 5 Sekunden Inaktivität automatisch aus.
-* 📺 **YouTube & SmartTube Integration:**
-  * Echte persönliche Empfehlungen deines Google-Kontos auf der Startseite (`FEwhat_to_watch`).
-  * Gepatchter TV-OAuth Flow: Anmeldung über `google.com/device` ohne nervige Google-Sicherheitsblockaden.
-  * Verlinkung zur werbefreien Android-App **SmartTube**.
+* 📺 **SmartTube & Trailer Integration:**
+  * Direkter 1-Klick-Start der werbefreien Android-App **SmartTube** im Haupt- und Seitenmenü (ohne fehleranfällige Kodi-YouTube-Widgets).
+  * `plugin.video.youtube` bleibt für automatische Film-/Serien-Trailer im Info-Menü einsatzbereit.
 * 🎮 **Streaming-Standard Fernbedienung:**
   * **Oben (▲):** Zeitbalken (Timeline) & Filmtitel einblenden (OSD).
-  * **Unten (▼):** Zeitbalken sofort ausblenden.
+  * **Unten (▼):** Episoden-Schublade (Serien) bzw. Besetzung/Cast (Filme) öffnen.
   * **Links / Rechts (◄ / ►):** 10 Sekunden vor- / zurückspulen.
   * **Mitte:** Play / Pause.
 * 🔒 **Diskreter Erwachsenenbereich (+18 / XXX):**

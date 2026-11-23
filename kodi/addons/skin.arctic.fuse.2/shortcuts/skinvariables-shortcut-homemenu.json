@@ -47,20 +47,6 @@
                 "widget_style": "Poster"
             },
             {
-                "label": "⭐ Meine YouTube Vorschläge",
-                "icon": "special://skin/extras/icons/video.png",
-                "path": "plugin://plugin.video.youtube/special/recommendations/",
-                "target": "videos",
-                "widget_style": "Landscape"
-            },
-            {
-                "label": "🔥 YouTube Trends",
-                "icon": "special://skin/extras/icons/video.png",
-                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
-                "target": "videos",
-                "widget_style": "Landscape"
-            },
-            {
                 "label": "🔥 Filme im Trend (Heute)",
                 "icon": "special://skin/extras/icons/film.png",
                 "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie&widget=true",
@@ -141,12 +127,6 @@
                 "label": "🔒 Archiv (+18 PIN)",
                 "icon": "special://skin/extras/icons/lock.png",
                 "path": "RunScript(special://skin/shortcuts/open_adult.py)",
-                "target": "videos"
-            },
-            {
-                "label": "🔑 YouTube Konto verbinden",
-                "icon": "special://skin/extras/icons/video.png",
-                "path": "RunPlugin(plugin://plugin.video.youtube/sign/in/)",
                 "target": "videos"
             }
         ],
@@ -261,56 +241,18 @@
         "submenulist_target": "videos"
     },
     {
-        "label": "YouTube & SmartTube",
+        "label": "SmartTube (YouTube)",
         "path": "StartAndroidActivity(org.smarttube.stable)",
         "icon": "special://skin/extras/icons/video.png",
         "target": "videos",
         "sidemenu_guid": "guid-smarttube-01",
         "guid": "guid-homemenu-yt",
-        "submenulist_label": "YouTube",
-        "submenulist_path": "plugin://plugin.video.youtube/",
-        "submenulist_icon": "special://skin/extras/icons/video.png",
-        "submenulist_target": "videos",
-        "widgets": [
-            {
-                "label": "⭐ Meine YouTube Vorschläge (Startseite)",
-                "path": "plugin://plugin.video.youtube/special/recommendations/",
-                "icon": "special://skin/extras/icons/video.png",
-                "target": "videos",
-                "widget_style": "Landscape"
-            },
-            {
-                "label": "🔔 Meine Abonnements",
-                "path": "plugin://plugin.video.youtube/special/my_subscriptions/",
-                "icon": "special://skin/extras/icons/video.png",
-                "target": "videos",
-                "widget_style": "Landscape"
-            },
-            {
-                "label": "🔥 YouTube Trends",
-                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
-                "icon": "special://skin/extras/icons/video.png",
-                "target": "videos",
-                "widget_style": "Landscape"
-            }
-        ],
+        "widgets": [],
         "submenu": [
             {
                 "label": "🚀 SmartTube App starten",
                 "icon": "special://skin/extras/icons/video.png",
                 "path": "StartAndroidActivity(org.smarttube.stable)",
-                "target": "videos"
-            },
-            {
-                "label": "YouTube Add-on öffnen",
-                "icon": "special://skin/extras/icons/video.png",
-                "path": "ActivateWindow(videos, plugin://plugin.video.youtube/, return)",
-                "target": "videos"
-            },
-            {
-                "label": "🔑 YouTube Konto verbinden (Sign-In)",
-                "icon": "special://skin/extras/icons/video.png",
-                "path": "RunPlugin(plugin://plugin.video.youtube/sign/in/)",
                 "target": "videos"
             }
         ]

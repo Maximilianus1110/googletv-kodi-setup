@@ -95,14 +95,32 @@ fi
 echo -e "${GREEN}✓ Sicherung abgelegt in: /sdcard/kodi_backup_${BACKUP_DATE}${NC}"
 
 EXISTING_TRAKT_TOKEN=$(adb -s "$DEVICE_ID" shell "sed -n 's/.*<setting id=\"trakt_token\"[^>]*>\(.*\)<\/setting>.*/\1/p' $REMOTE_KODI_DIR/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml 2>/dev/null" | tr -d '\r' || true)
+TMP_TRAKT_SYNC_SETTINGS=""
+if adb -s "$DEVICE_ID" shell "test -s $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml" >/dev/null 2>&1; then
+    TMP_TRAKT_SYNC_SETTINGS=$(mktemp -t kodi_trakt_sync_settings.XXXXXX)
+    if ! adb -s "$DEVICE_ID" pull "$REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml" "$TMP_TRAKT_SYNC_SETTINGS" >/dev/null 2>&1; then
+        rm -f "$TMP_TRAKT_SYNC_SETTINGS"
+        TMP_TRAKT_SYNC_SETTINGS=""
+    fi
+fi
 
 # 5. Dateien übertragen
 echo -e "\n${YELLOW}[4/5] Übertrage optimierte Add-ons, Skin & Konfigurationen...${NC}"
+LOCKED_ADDONS=""
+for addon_dir in plugin.video.themoviedb.helper service.upnext script.skinvariables; do
+    if adb -s "$DEVICE_ID" shell "ls -ld $REMOTE_KODI_DIR/addons/$addon_dir 2>/dev/null" | grep -q "u0_a"; then
+        LOCKED_ADDONS="${LOCKED_ADDONS} ${addon_dir}"
+    fi
+done
+if [ -n "$LOCKED_ADDONS" ]; then
+    echo -e "${RED}Warnung: Durch Kodi Auto-Updates unter Android 11+ gesperrte Add-on-Ordner gefunden:${NC}${YELLOW}${LOCKED_ADDONS}${NC}"
+    echo -e "${YELLOW}Falls das Entpacken mit Permission Denied scheitert, diese Add-ons zuerst über Kodi deinstallieren/bereinigen oder Kodi-Daten neu initialisieren.${NC}"
+fi
 TRANSFER_OK=false
 if command -v tar &>/dev/null && adb -s "$DEVICE_ID" shell "command -v tar" &>/dev/null; then
     echo -e "-> Übertrage gebündeltes Setup via tar-Archiv (deutlich schneller über WLAN/USB)..."
     TMP_TAR=$(mktemp -t kodi_setup_bundle.XXXXXX)
-    if tar --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' -cf "$TMP_TAR" -C "$SCRIPT_DIR/kodi" addons userdata &&
+    if tar --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' --exclude='script-skinvariables-generator-includes--kodiprofile-*.xml' -cf "$TMP_TAR" -C "$SCRIPT_DIR/kodi" addons userdata &&
        adb -s "$DEVICE_ID" push "$TMP_TAR" "/sdcard/Download/kodi_setup_bundle.tar" &&
        adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR && tar -xf /sdcard/Download/kodi_setup_bundle.tar -C $REMOTE_KODI_DIR && rm -f /sdcard/Download/kodi_setup_bundle.tar"; then
         TRANSFER_OK=true
@@ -164,6 +182,49 @@ with open(sys.argv[2], "w", encoding="utf-8") as f:
     echo -e "${GREEN}✓ Bestehender Trakt-Token wurde übernommen!${NC}"
 fi
 
+if [ -n "$TMP_TRAKT_SYNC_SETTINGS" ] && [ -s "$TMP_TRAKT_SYNC_SETTINGS" ]; then
+    echo -e "-> Stelle Trakt-Sync OAuth-Sitzung (script.module.tmdbhelper.sync.trakt) wieder her..."
+    adb -s "$DEVICE_ID" push "$TMP_TRAKT_SYNC_SETTINGS" "/sdcard/Download/kodi_trakt_sync_settings.xml" >/dev/null
+    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt && cp -f /sdcard/Download/kodi_trakt_sync_settings.xml $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && chmod 777 $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && rm -f /sdcard/Download/kodi_trakt_sync_settings.xml"
+    rm -f "$TMP_TRAKT_SYNC_SETTINGS"
+    echo -e "${GREEN}✓ Trakt-Sync OAuth-Credentials wurden übernommen!${NC}"
+fi
+
+if command -v python3 &>/dev/null && adb -s "$DEVICE_ID" shell "test -f $REMOTE_KODI_DIR/userdata/guisettings.xml" >/dev/null 2>&1; then
+    TMP_GUI_SETTINGS=$(mktemp -t kodi_guisettings.XXXXXX)
+    if adb -s "$DEVICE_ID" pull "$REMOTE_KODI_DIR/userdata/guisettings.xml" "$TMP_GUI_SETTINGS" >/dev/null 2>&1; then
+        echo -e "-> Setze Auto-Update-Schutz, Kodi 21 Stream-Cache (64 MB) & 24p-Bildsync in guisettings.xml..."
+        python3 -c '
+import re, sys
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as f:
+    txt = f.read()
+updates = {
+    "general.addonupdates": "1",
+    "filecache.buffermode": "4",
+    "filecache.memorysize": "64",
+    "filecache.readfactor": "400",
+    "videoplayer.adjustrefreshrate": "2",
+}
+for key, val in updates.items():
+    pat = rf"<setting id=\"{re.escape(key)}\"[^>]*(?:/>|>.*?</setting>)"
+    repl = f"<setting id=\"{key}\">{val}</setting>"
+    if re.search(pat, txt):
+        txt = re.sub(pat, lambda _: repl, txt)
+    else:
+        txt = txt.replace("</settings>", f"    {repl}\n</settings>")
+with open(path, "w", encoding="utf-8") as f:
+    f.write(txt)
+' "$TMP_GUI_SETTINGS"
+        adb -s "$DEVICE_ID" push "$TMP_GUI_SETTINGS" "/sdcard/Download/kodi_guisettings.xml" >/dev/null
+        adb -s "$DEVICE_ID" shell "cp -f /sdcard/Download/kodi_guisettings.xml $REMOTE_KODI_DIR/userdata/guisettings.xml && chmod 777 $REMOTE_KODI_DIR/userdata/guisettings.xml && rm -f /sdcard/Download/kodi_guisettings.xml"
+        echo -e "${GREEN}✓ guisettings.xml optimiert (Updates=Notify, Cache=64 MB, 24p-Sync=2)!${NC}"
+    fi
+    rm -f "$TMP_GUI_SETTINGS"
+fi
+
+adb -s "$DEVICE_ID" shell "chmod -R 777 $REMOTE_KODI_DIR/addons $REMOTE_KODI_DIR/userdata 2>/dev/null || true"
+
 # 6. Standby Keep-Alive setzen & Kodi neu starten
 echo -e "\n${YELLOW}[5/5] Aktiviere Standby Keep-Alive & starte Kodi neu...${NC}"
 adb -s "$DEVICE_ID" shell "dumpsys deviceidle whitelist +$KODI_PKG" >/dev/null 2>&1 || true
@@ -181,9 +242,8 @@ echo -e " 1. ${YELLOW}Trakt verbinden (für 'Weiterschauen' wie Netflix):${NC}"
 echo -e "    Add-ons -> TMDb Helper -> Einstellungen -> Trakt -> Konto autorisieren"
 echo -e "    Code auf ${CYAN}https://trakt.tv/activate${NC} eingeben."
 echo -e ""
-echo -e " 2. ${YELLOW}YouTube verbinden (für persönliche Vorschläge):${NC}"
-echo -e "    YouTube & SmartTube -> 'YouTube Konto verbinden'"
-echo -e "    Code auf ${CYAN}https://google.com/device${NC} eingeben (ohne Sicherheitswarnung)."
+echo -e " 2. ${YELLOW}SmartTube App (werbefreies YouTube):${NC}"
+echo -e "    Starte ${CYAN}SmartTube${NC} bequem über den Menüpunkt 'SmartTube (YouTube)'."
 echo -e ""
 echo -e " 3. ${YELLOW}Erwachsenenbereich (+18 / XXX):${NC}"
 echo -e "    PIN ist standardmäßig ${GREEN}0000${NC}."

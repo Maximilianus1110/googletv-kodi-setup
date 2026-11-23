@@ -5,11 +5,7 @@
         <!-- Keep false to prevent invisible dialogs when playback is paused -->
         <smartredraw>false</smartredraw>
     </gui>
-    <cache>
-        <buffermode>1</buffermode>
-        <memorysize>67108864</memorysize>
-        <readfactor>4.0</readfactor>
-    </cache>
+    <!-- Kodi 21+ configures stream caching in guisettings.xml (filecache.*) -->
     <network>
         <curlclienttimeout>10</curlclienttimeout>
         <curllowspeedtime>10</curllowspeedtime>

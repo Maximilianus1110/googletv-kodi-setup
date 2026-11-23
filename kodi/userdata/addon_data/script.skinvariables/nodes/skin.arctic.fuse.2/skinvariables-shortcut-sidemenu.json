@@ -41,20 +41,6 @@
                 "guid": "guid-trakt-byw-tv-01"
             },
             {
-                "label": "⭐ Meine YouTube Vorschläge",
-                "path": "plugin://plugin.video.youtube/special/recommendations/",
-                "widget_style": "Landscape",
-                "target": "videos",
-                "guid": "guid-yt-side-rec"
-            },
-            {
-                "label": "🔥 YouTube Trends",
-                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
-                "widget_style": "Landscape",
-                "target": "videos",
-                "guid": "guid-yt-side-trends"
-            },
-            {
                 "label": "🔥 Filme im Trend",
                 "path": "plugin://plugin.video.themoviedb.helper/?info=trending_day&tmdb_type=movie&widget=true",
                 "widget_style": "Poster",
@@ -209,37 +195,11 @@
         "spotlight_target": "videos"
     },
     {
-        "label": "YouTube & SmartTube",
+        "label": "SmartTube (YouTube)",
         "icon": "special://skin/extras/icons/video.png",
         "path": "StartAndroidActivity(org.smarttube.stable)",
         "target": "",
-        "widgets": [
-            {
-                "label": "⭐ Meine YouTube Vorschläge (Startseite)",
-                "path": "plugin://plugin.video.youtube/special/recommendations/",
-                "widget_style": "Landscape",
-                "target": "videos",
-                "guid": "guid-yt-side-rec-main"
-            },
-            {
-                "label": "🔔 Meine Abonnements",
-                "path": "plugin://plugin.video.youtube/special/my_subscriptions/",
-                "widget_style": "Landscape",
-                "target": "videos",
-                "guid": "guid-yt-side-subs"
-            },
-            {
-                "label": "🔥 YouTube Trends",
-                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
-                "widget_style": "Landscape",
-                "target": "videos",
-                "guid": "guid-yt-side-pop"
-            }
-        ],
-        "guid": "guid-smarttube-01",
-        "spotlight_label": "YouTube Vorschläge",
-        "spotlight_path": "plugin://plugin.video.youtube/special/popular_right_now/",
-        "spotlight_icon": "special://skin/extras/icons/video.png",
-        "spotlight_target": "videos"
+        "widgets": [],
+        "guid": "guid-smarttube-01"
     }
 ]
