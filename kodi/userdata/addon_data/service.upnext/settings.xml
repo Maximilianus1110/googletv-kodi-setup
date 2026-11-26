@@ -15,6 +15,7 @@
     <setting id="autoPlayTimeM">15</setting>
     <setting id="autoPlayTimeL">15</setting>
     <setting id="autoPlayTimeXL">15</setting>
+    <setting id="autoPlayCreditsTime">15</setting>
     <setting id="enableSkipSegments">true</setting>
     <setting id="autoSkipIntro">false</setting>
     <setting id="autoSkipRecap">false</setting>

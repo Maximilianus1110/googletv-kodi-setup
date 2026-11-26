@@ -12,10 +12,10 @@ EPISODE_PROPERTIES = ['art', 'dateadded', 'episode', 'file', 'firstaired', 'last
 
 
 def credits_autoplay_deadline(data, play_time, total_time):
-    """Return an opt-in playback deadline only when a credits offset is known."""
+    """Return a playback deadline when a credits offset is known."""
     delay = get_setting_int('autoPlayCreditsTime')
-    if delay <= 0:
-        return None
+    if not delay or delay <= 0:
+        delay = get_setting_int('autoPlaySeasonTime') or 15
     try:
         offset = float(data.get('notification_offset'))
     except (TypeError, ValueError):

@@ -284,6 +284,8 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
     def scrobbler_update(self):
         if not self.scrobbler or not self.isPlayingVideo():
             return
+        if self.previous_item and self.current_item and self.current_item != self.previous_item:
+            return
         self.scrobbler.update_time(self.tmdb_type, self.tmdb_id, self.getTime())
 
     @cached_property
@@ -530,7 +532,14 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
             with urllib.request.urlopen(req, timeout=4.0) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
 
+            mon = Monitor()
             total_time = self.getTotalTime() if self.isPlayingVideo() else 0
+            waited = 0
+            while total_time <= 0 and self.isPlayingVideo() and waited < 10 and not mon.abortRequested():
+                if mon.waitForAbort(0.5):
+                    break
+                waited += 1
+                total_time = self.getTotalTime() if self.isPlayingVideo() else 0
             skip_segments = []
             for seg in (data.get('intro') or []):
                 if not isinstance(seg, dict):
