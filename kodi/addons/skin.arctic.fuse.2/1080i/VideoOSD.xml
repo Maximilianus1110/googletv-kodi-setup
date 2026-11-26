@@ -202,7 +202,6 @@
                         <!-- Button 10: Nachtmodus (Dialog-Booster & DRC) -->
                         <control type="button" id="6010">
                             <include>Defs_OSD_Button</include>
-                            <onclick>CancelAlarm(osd_timeout,true)</onclick>
                             <onclick>RunScript(special://skin/shortcuts/toggle_nightmode.py)</onclick>
                             <onup>8200</onup>
                         </control>

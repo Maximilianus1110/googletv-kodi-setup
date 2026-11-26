@@ -4,7 +4,7 @@
     <setting id="selectOpensPlaybackControls">false</setting>
     <setting id="autoPlayMode">0</setting>
     <setting id="enablePlaylist">true</setting>
-    <setting id="includeWatched">false</setting>
+    <setting id="includeWatched">true</setting>
     <setting id="markWatchedEarly">true</setting>
     <setting id="playedInARow">5</setting>
     <setting id="stillWatchingMinutes">0</setting>

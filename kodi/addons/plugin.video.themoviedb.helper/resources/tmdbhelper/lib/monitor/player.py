@@ -492,16 +492,20 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
         SafeThread(target=self._queue_episodes_worker, args=(self.tmdb_id, self.season, self.episode)).start()
 
     def _queue_episodes_worker(self, tmdb_id, season, episode):
+        import threading
         from xbmc import PlayList, PLAYLIST_VIDEO, Monitor
         from tmdbhelper.lib.addon.thread import SafeThread
-        SafeThread(target=self._fetch_intro_segments, args=(tmdb_id, season, episode)).start()
+        playlist_ready = threading.Event()
+        SafeThread(target=self._fetch_intro_segments, args=(tmdb_id, season, episode, playlist_ready)).start()
         m = Monitor()
-        m.waitForAbort(1)
-        if m.abortRequested() or not self.isPlayingVideo():
-            return
-        playlist = PlayList(PLAYLIST_VIDEO)
-        if playlist.size() <= 1:
-            try:
+        next_season = int(season)
+        next_episode = int(episode) + 1
+        has_next = True
+        try:
+            if not m.waitForAbort(1) and self.isPlayingVideo():
+                playlist = PlayList(PLAYLIST_VIDEO)
+                pos = playlist.getposition()
+                remaining_in_playlist = (playlist.size() - 1 - pos) if (playlist.size() > 0 and pos >= 0) else 0
                 from tmdbhelper.lib.player.action.episodes import PlayerNextEpisodes
                 pne = PlayerNextEpisodes(
                     tmdb_id=tmdb_id,
@@ -509,23 +513,44 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
                     episode=episode,
                     player='xstream.json'
                 )
-                pne.update(forced=True, single=False, clear=False)
-            except Exception:
-                pass
+                if playlist.size() <= 1 or remaining_in_playlist <= 0:
+                    pne.update(forced=True, single=False, clear=False)
+                next_list = pne.next_episodes or []
+                if next_list:
+                    info = next_list[0].get('infolabels') or {}
+                    next_season = int(info.get('season') or season)
+                    next_episode = int(info.get('episode') or (int(episode) + 1))
+                else:
+                    has_next = False
+        except Exception:
+            pass
+        finally:
+            playlist_ready.set()
 
-        # Trigger preloading for next episode in background
+        if m.abortRequested() or not self.isPlayingVideo() or not has_next:
+            return
+
+        # Trigger preloading for next episode (including season transition S+1 E1) in background
         m.waitForAbort(8)
         if m.abortRequested() or not self.isPlayingVideo():
             return
         try:
             from xbmc import executebuiltin
-            executebuiltin(f"RunPlugin(plugin://script.module.xstreamscraper/?id={tmdb_id}&season={season}&episode={int(episode)+1}&preload=true)")
+            executebuiltin(f"RunPlugin(plugin://script.module.xstreamscraper/?id={tmdb_id}&season={next_season}&episode={next_episode}&preload=true)")
         except Exception:
             pass
 
-    def _fetch_intro_segments(self, tmdb_id, season, episode):
+    def _fetch_intro_segments(self, tmdb_id, season, episode, playlist_ready=None):
         import urllib.request, json, base64
         from xbmc import executeJSONRPC, log as xbmc_log, LOGINFO
+        payload = {
+            'current_episode': {
+                'episodeid': f"{tmdb_id}.{season}.{episode}",
+                'tvshowid': str(tmdb_id),
+                'season': int(season),
+                'episode': int(episode),
+            }
+        }
         try:
             url = f"https://api.theintrodb.org/v4/media?tmdb_id={tmdb_id}&season={season}&episode={episode}"
             req = urllib.request.Request(url, headers={'User-Agent': 'Kodi-TMDbHelper/6.0'})
@@ -561,7 +586,6 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
                     continue
                 skip_segments.append({'kind': 'intro', 'start': start_sec, 'end': end_sec})
 
-            payload = {}
             if skip_segments:
                 payload['skip_segments'] = skip_segments
 
@@ -579,22 +603,25 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
                         if total_time > 0 and (total_time * 0.70) <= credits_start < (total_time - 5.0):
                             payload['notification_offset'] = int(credits_start)
                         break
-
-            if payload:
-                b64 = base64.b64encode(json.dumps(payload).encode('utf-8')).decode('ascii')
-                rpc = {
-                    'jsonrpc': '2.0',
-                    'method': 'JSONRPC.NotifyAll',
-                    'params': {
-                        'sender': 'plugin.video.themoviedb.helper.SIGNAL',
-                        'message': 'Other.upnext_data',
-                        'data': [b64]
-                    },
-                    'id': 1
-                }
-                executeJSONRPC(json.dumps(rpc))
-                xbmc_log(f"[IntroSkip] Sent segments for tmdb={tmdb_id} S{season}E{episode}: {payload}", LOGINFO)
-            else:
-                xbmc_log(f"[IntroSkip] No valid intro/credits segments for tmdb={tmdb_id} S{season}E{episode}", LOGINFO)
         except Exception as e:
             xbmc_log(f"[IntroSkip] Lookup failed for tmdb={tmdb_id} S{season}E{episode}: {e}", LOGINFO)
+
+        if playlist_ready is not None:
+            playlist_ready.wait(timeout=6.0)
+
+        try:
+            b64 = base64.b64encode(json.dumps(payload).encode('utf-8')).decode('ascii')
+            rpc = {
+                'jsonrpc': '2.0',
+                'method': 'JSONRPC.NotifyAll',
+                'params': {
+                    'sender': 'plugin.video.themoviedb.helper.SIGNAL',
+                    'message': 'Other.upnext_data',
+                    'data': [b64]
+                },
+                'id': 1
+            }
+            executeJSONRPC(json.dumps(rpc))
+            xbmc_log(f"[IntroSkip] Sent upnext_data for tmdb={tmdb_id} S{season}E{episode}: {payload}", LOGINFO)
+        except Exception as e:
+            xbmc_log(f"[IntroSkip] NotifyAll failed for tmdb={tmdb_id} S{season}E{episode}: {e}", LOGINFO)

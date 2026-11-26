@@ -1,7 +1,7 @@
 # 📺 YouTube-Integration (Gepatchter TV-OAuth) & SmartTube-Brücke
 
 > [!NOTE]
-> Abweichungen zur früheren Kurz-Doku (z. B. welche YouTube-Widgets tatsächlich auf der Haupt-Startseite vs. im Untermenü *„YouTube & SmartTube“* liegen) sind in [**`docs/ABWEICHUNGEN_ALT_VS_CODE.md`**](ABWEICHUNGEN_ALT_VS_CODE.md) dokumentiert.
+> Eine Übersicht aller behobenen Abweichungen zwischen früherer Doku und aktuellem Code findest du in [**`docs/ABWEICHUNGEN_ALT_VS_CODE.md`**](ABWEICHUNGEN_ALT_VS_CODE.md).
 
 ---
 
@@ -10,7 +10,7 @@
 | Funktion | Auslöser | Beteiligte Dateien & Funktionen | Verhalten im Überblick |
 | :--- | :--- | :--- | :--- |
 | **[1. Gepatchter 1-Schritt TV-OAuth Login](#1-gepatchter-1-schritt-tv-oauth-login-yt_loginpy)** | Menüpunkt *„🔑 YouTube Konto verbinden (Sign-In)“* (`plugin://plugin.video.youtube/sign/in/`) | [`plugin.video.youtube/.../helper/yt_login.py`](../kodi/addons/plugin.video.youtube/resources/lib/youtube_plugin/youtube/helper/yt_login.py) → `_do_login()` (Zeile 74) | Fordert **nur ein einziges `tv`-Token** (`token_types = ['tv']`) an. Verhindert dadurch den zweiten Login-Schritt, den Google bei Drittanbieter-Desktop-Clients blockiert. |
-| **[2. Persönliche Empfehlungen (`FEwhat_to_watch`)](#2-persnliche-youtube-empfehlungen-fewhat_to_watch--widgets)** | Automatisch in den Startseiten- und Hub-Widgets | [`plugin.video.youtube/.../helper/yt_specials.py`](../kodi/addons/plugin.video.youtube/resources/lib/youtube_plugin/youtube/helper/yt_specials.py) (Zeile 130)<br>[`skinvariables-shortcut-homemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-homemenu.json)<br>[`skinvariables-shortcut-sidemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-sidemenu.json) | Lädt über den TV-InnerTube-Feed `FEwhat_to_watch` deine echten persönlichen Startseiten-Vorschläge sowie Trends und Abonnements direkt in Arctic Fuse 2. |
+| **[2. Persönliche Empfehlungen (`FEwhat_to_watch`) & Abonnements](#2-persnliche-youtube-empfehlungen-fewhat_to_watch--abonnements-widgets)** | Automatisch in den Startseiten- und Hub-Widgets | [`plugin.video.youtube/.../helper/yt_specials.py`](../kodi/addons/plugin.video.youtube/resources/lib/youtube_plugin/youtube/helper/yt_specials.py) (Zeile 130)<br>[`skinvariables-shortcut-homemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-homemenu.json)<br>[`skinvariables-shortcut-sidemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-sidemenu.json) | Zeigt direkt auf der Haupt-Startseite deine persönlichen **YouTube Vorschläge (`FEwhat_to_watch`)** sowie **Meine Abonnements (`my_subscriptions`)** an. |
 | **[3. Native SmartTube-App starten](#3-direktstart-der-nativen-android-app-smarttube)** | Klick auf Seitenleisten-Eintrag *„YouTube & SmartTube“* | [`skinvariables-shortcut-sidemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-sidemenu.json) (Zeile 214) | Führt `StartAndroidActivity(org.smarttube.stable)` aus und wechselt nahtlos in die werbefreie Android-TV-App **SmartTube**. |
 
 ---
@@ -38,17 +38,17 @@ Im unmodifizierten Kodi YouTube-Add-on fordert `_do_login()` nacheinander **zwei
 
 ---
 
-## 2. ⭐ Persönliche YouTube-Empfehlungen (`FEwhat_to_watch`) & Widgets
+## 2. ⭐ Persönliche YouTube-Empfehlungen (`FEwhat_to_watch`) & Abonnements-Widgets
 
 ### Technischer Hintergrund (`yt_specials.py`)
 In [`kodi/addons/plugin.video.youtube/resources/lib/youtube_plugin/youtube/helper/yt_specials.py`](../kodi/addons/plugin.video.youtube/resources/lib/youtube_plugin/youtube/helper/yt_specials.py) (Zeile 130) ruft der Pfad `plugin://plugin.video.youtube/special/recommendations/` über den angemeldeten TV-Client die YouTube-InnerTube-Browse-ID **`FEwhat_to_watch`** ab – exakt denselben persönlichen Startseiten-Feed wie die originale YouTube-App auf dem Smart-TV.
 
 ### Wo welches YouTube-Widget im Skin eingebunden ist
-Laut [`skinvariables-shortcut-homemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-homemenu.json) und [`skinvariables-shortcut-sidemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-sidemenu.json) sind die Widgets wie folgt verteilt:
+In [`skinvariables-shortcut-homemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-homemenu.json) und [`skinvariables-shortcut-sidemenu.json`](../kodi/userdata/addon_data/script.skinvariables/nodes/skin.arctic.fuse.2/skinvariables-shortcut-sidemenu.json) (sowie den baugleichen Skin-Defaults unter `kodi/addons/skin.arctic.fuse.2/shortcuts/`) sind die YouTube-Reihen wie folgt konfiguriert:
 
 | Menübereich (Seitenleiste) | Eingebundene YouTube-Widget-Reihen | Interner Plugin-Pfad |
 | :--- | :--- | :--- |
-| **1. Entdecken / Start & Trends** *(Haupt-Startseite)* | • **⭐ Meine YouTube Vorschläge**<br>• **🔥 YouTube Trends** | `plugin://plugin.video.youtube/special/recommendations/`<br>`plugin://plugin.video.youtube/special/popular_right_now/` |
+| **1. Entdecken / Start & Trends** *(Haupt-Startseite)* | • **⭐ Meine YouTube Vorschläge**<br>• **🔔 Meine Abonnements** | `plugin://plugin.video.youtube/special/recommendations/`<br>`plugin://plugin.video.youtube/special/my_subscriptions/` |
 | **2. YouTube & SmartTube** *(Eigener Menü-Hub)* | • **⭐ Meine YouTube Vorschläge (Startseite)**<br>• **🔔 Meine Abonnements**<br>• **🔥 YouTube Trends** | `plugin://plugin.video.youtube/special/recommendations/`<br>`plugin://plugin.video.youtube/special/my_subscriptions/`<br>`plugin://plugin.video.youtube/special/popular_right_now/` |
 
 *(Weitere Listen wie Wiedergabeverlauf, Später ansehen oder eigene Playlists sind über das Untermenü **„YouTube Add-on öffnen“** → `ActivateWindow(videos, plugin://plugin.video.youtube/, return)` direkt im Add-on erreichbar).*
@@ -62,4 +62,4 @@ Laut [`skinvariables-shortcut-homemenu.json`](../kodi/userdata/addon_data/script
   StartAndroidActivity(org.smarttube.stable)
   ```
 * **Voraussetzung:** Die kostenlose Open-Source-App **SmartTube** (Paketname `org.smarttube.stable`) muss auf deiner Google-TV-/Android-TV-Box installiert sein.
-* **Vorteil:** Während du deine persönlichen YouTube-Vorschläge und Trends direkt als Vorschau-Kacheln auf der Kodi-Startseite siehst, kannst du mit einem Klick für lange 4K-60fps-HDR-Videos oder SponsorBlock direkt in die native SmartTube-App wechseln.
+* **Vorteil:** Während du deine persönlichen YouTube-Vorschläge und Abonnements direkt als Vorschau-Kacheln auf der Kodi-Startseite siehst, kannst du mit einem Klick für lange 4K-60fps-HDR-Videos oder SponsorBlock direkt in die native SmartTube-App wechseln.

@@ -48,11 +48,11 @@
                 "guid": "guid-yt-side-rec"
             },
             {
-                "label": "🔥 YouTube Trends",
-                "path": "plugin://plugin.video.youtube/special/popular_right_now/",
+                "label": "🔔 Meine Abonnements",
+                "path": "plugin://plugin.video.youtube/special/my_subscriptions/",
                 "widget_style": "Landscape",
                 "target": "videos",
-                "guid": "guid-yt-side-trends"
+                "guid": "guid-yt-side-subs-home"
             },
             {
                 "label": "🔥 Filme im Trend",
