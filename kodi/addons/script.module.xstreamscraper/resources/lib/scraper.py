@@ -320,6 +320,20 @@ def get_details(_type, _id):
 	oRequest.cacheTime = 60 * 60 * 24 * 14
 	return oRequest.requestJson()
 
+def get_episode_title(_id, season, episode):
+	if not _id or not season or not episode:
+		return None
+	try:
+		url = "https://api.themoviedb.org/3/tv/%s/season/%s/episode/%s?api_key=%s&language=de" % (_id, int(season), int(episode), api_key)
+		oRequest = cRequestHandler(url)
+		oRequest.cacheTime = 60 * 60 * 24 * 14
+		ep_data = oRequest.requestJson()
+		if isinstance(ep_data, dict) and ep_data.get("name"):
+			return ep_data.get("name")
+	except Exception:
+		pass
+	return None
+
 def _get_preload_cache(key, pop=False):
 	try:
 		win = xbmcgui.Window(10000)
@@ -418,6 +432,11 @@ _HOSTER_PRIO = {
 _HOSTER_DEFAULT_QUAL = {
 	"filemoon": "1080p", "voe": "HD", "vavoo": "HD", "streamwish": "HD", "vidmoly": "HD",
 }
+_HOSTER_DOMAINS = {
+	"voe": "voe.sx", "filemoon": "filemoon.sx", "streamwish": "streamwish.to",
+	"vidmoly": "vidmoly.to", "luluvdo": "luluvdo.com", "speedfiles": "speedfiles.net",
+	"vidoza": "vidoza.net", "streamtape": "streamtape.com", "doodstream": "dood.li", "dood": "dood.li",
+}
 
 def _hoster_match(name, table, default=None):
 	low = str(name or "").lower()
@@ -426,14 +445,21 @@ def _hoster_match(name, table, default=None):
 			return v
 	return default
 
+def _ping_target(c):
+	link = str(c.get("link") or "")
+	name = str(c.get("name") or "")
+	if "://" in link:
+		return link
+	if "." in name:
+		return name
+	return _hoster_match(name, _HOSTER_DOMAINS, "") or ""
+
 def _ping_candidates(candidates):
 	targets = {}
 	for c in candidates:
 		if c.get("_ping_checked"):
 			continue
-		link = str(c.get("link") or "")
-		name = str(c.get("name") or "")
-		target = link if "://" in link else (name if "." in name else "")
+		target = _ping_target(c)
 		if target:
 			targets[target] = None
 	if targets:
@@ -446,9 +472,7 @@ def _ping_candidates(candidates):
 	for c in candidates:
 		if c.get("_ping_checked"):
 			continue
-		link = str(c.get("link") or "")
-		name = str(c.get("name") or "")
-		target = link if "://" in link else (name if "." in name else "")
+		target = _ping_target(c)
 		c["_ping_ms"] = targets.get(target)
 		c["_ping_checked"] = True
 
@@ -533,12 +557,14 @@ def select_and_play(_type, _id, season, episode, resume_time=None):
 		if not data: return showFailedNotification("TMDB nicht erreichbar")
 		if _type == "tv": isSerie, name, releaseDate = True, data["name"], data["first_air_date"]
 		else: isSerie, name, releaseDate = False, data["title"], data["release_date"]
+		ep_title = get_episode_title(_id, season, episode) if isSerie else None
 		media_meta = {
 			'type': _type,
 			'tmdb_id': _id,
 			'season': season,
 			'episode': episode,
 			'title': name,
+			'episode_title': ep_title,
 			'year': releaseDate[:4] if releaseDate else None,
 			'imdb': data.get('imdb_id')
 		}
@@ -568,7 +594,7 @@ def select_and_play(_type, _id, season, episode, resume_time=None):
 
 		while True:
 			ranked, labels = _rank_and_format_candidates(candidates, key)
-			menu_items = ["⚡ [Live-Speedtest: Top-5 Streams auflösen & echte Auflösung messen]"] + labels
+			menu_items = ["⚡ [Live-Speedtest: Alle Streams auflösen & echte Auflösung messen]"] + labels
 			_wait_progress_closed()
 			chosen = xbmcgui.Dialog().select(header, menu_items)
 			if chosen < 0:
@@ -578,18 +604,18 @@ def select_and_play(_type, _id, season, episode, resume_time=None):
 					xbmc.Player().pause()
 				return
 			if chosen == 0:
-				to_test = [c for c in ranked if "_probe_ok" not in c][:5]
+				to_test = [c for c in ranked if "_probe_ok" not in c]
 				if not to_test:
-					xbmcgui.Dialog().notification("Live-Speedtest", "Top-Streams wurden bereits geprüft.", xbmcgui.NOTIFICATION_INFO, 2000)
+					xbmcgui.Dialog().notification("Live-Speedtest", "Alle Streams wurden bereits geprüft.", xbmcgui.NOTIFICATION_INFO, 2000)
 					continue
-				dialog.create("Live-Benchmark läuft...", "Messe reale Auflösung & Speed der Top-Streams...")
+				dialog.create("Live-Benchmark läuft...", "Messe reale Auflösung & Speed aller Streams...")
 				try:
 					for idx, cand in enumerate(to_test, 1):
 						if dialog.iscanceled():
 							break
 						dialog.update(int(idx * 100 / len(to_test)), f"Prüfe {idx}/{len(to_test)}: {cand.get('name')} ({cand.get('site')})")
 						try:
-							url, res, ms = _test_with_probe(cand, limit=6)
+							url, res, ms = _test_with_probe(cand, limit=5)
 							if url:
 								cand["_resolved_url"] = url
 								cand["_probe_res"] = res
@@ -717,12 +743,14 @@ def _search_and_play(_type, _id, season, episode):
 	if not data: return showFailedNotification("TMDB nicht erreichbar")
 	if _type == "tv": isSerie, name, releaseDate = True, data["name"], data["first_air_date"]
 	else: isSerie, name, releaseDate = False, data["title"], data["release_date"]
+	ep_title = get_episode_title(_id, season, episode) if isSerie else None
 	media_meta = {
 		'type': _type,
 		'tmdb_id': _id,
 		'season': season,
 		'episode': episode,
 		'title': name,
+		'episode_title': ep_title,
 		'year': releaseDate[:4] if releaseDate else None,
 		'imdb': data.get('imdb_id')
 	}
@@ -799,9 +827,10 @@ def _listitem(url, label, meta=None):
 		try:
 			info_tag = o.getVideoInfoTag()
 			is_tv = meta.get('type') == 'tv'
+			ep_title = (meta.get('episode_title') or meta.get('title')) if is_tv else meta.get('title')
 			info_tag.setMediaType('episode' if is_tv else 'movie')
-			if meta.get('title'):
-				info_tag.setTitle(meta['title'])
+			if ep_title:
+				info_tag.setTitle(ep_title)
 			if meta.get('tmdb_id'):
 				info_tag.setUniqueID(str(meta['tmdb_id']), 'tmdb')
 				if is_tv:
@@ -826,7 +855,7 @@ def _listitem(url, label, meta=None):
 				o.setProperty('StartOffset', str(float(meta['resume_time'])))
 			infodict = {
 				'mediatype': 'episode' if is_tv else 'movie',
-				'title': meta.get('title') or label,
+				'title': ep_title or label,
 			}
 			if is_tv:
 				infodict['tvshowtitle'] = meta.get('title') or label

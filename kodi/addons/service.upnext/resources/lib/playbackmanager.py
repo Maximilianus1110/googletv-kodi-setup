@@ -244,6 +244,9 @@ class PlaybackManager:
                 elif showing_still_watching_page:
                     still_watching_page.update_progress_control(remaining=remaining, runtime=episode.get('runtime'))
             sleep(100)
+        if (showing_next_up_page and self.player.isPlaying() and (total_time - play_time <= 1)
+                and not next_up_page.is_cancel() and not next_up_page.is_watch_now()):
+            next_up_page.set_auto_advance()
         return showing_next_up_page, showing_still_watching_page
 
     def check_late_watch_limit(self, next_page, still_page, *, showing_next, showing_still,

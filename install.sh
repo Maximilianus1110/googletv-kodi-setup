@@ -58,7 +58,7 @@ if [[ "${1:-}" == "--keymaps-only" ]]; then
     echo -e "\n${YELLOW}Übertrage nur die Fernbedienungs-Keymaps...${NC}"
     adb -s "$DEVICE_ID" shell "mkdir -p /sdcard/Download/kodi_stage/keymaps"
     adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "/sdcard/Download/kodi_stage/keymaps/"
-    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/keymaps && cp -rf /sdcard/Download/kodi_stage/keymaps/* $REMOTE_KODI_DIR/userdata/keymaps/ && rm -rf /sdcard/Download/kodi_stage"
+    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/keymaps && rm -f $REMOTE_KODI_DIR/userdata/keymaps/secret_remote.xml && cp -rf /sdcard/Download/kodi_stage/keymaps/* $REMOTE_KODI_DIR/userdata/keymaps/ && rm -rf /sdcard/Download/kodi_stage"
     echo -e "${GREEN}✓ Keymaps erfolgreich aktualisiert!${NC}"
     exit 0
 fi
@@ -135,7 +135,7 @@ if [ "$TRANSFER_OK" != "true" ]; then
     STAGE_DIR="/sdcard/Download/kodi_setup_stage"
     adb -s "$DEVICE_ID" shell "rm -rf $STAGE_DIR && mkdir -p $STAGE_DIR/addons $STAGE_DIR/userdata/keymaps $STAGE_DIR/userdata/addon_data"
 
-    echo -e "-> Übertrage Fernbedienungs-Keymaps (player_controls.xml, secret_remote.xml)..."
+    echo -e "-> Übertrage Fernbedienungs-Keymaps (player_controls.xml)..."
     adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/keymaps/"* "$STAGE_DIR/userdata/keymaps/"
 
     echo -e "-> Übertrage Addon-Einstellungen (TMDb Helper, xStream, Scraper, UpNext)..."
@@ -146,7 +146,7 @@ if [ "$TRANSFER_OK" != "true" ]; then
         adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/userdata/advancedsettings.xml" "$STAGE_DIR/userdata/"
     fi
 
-    echo -e "-> Übertrage gepatchte Add-ons & Arctic Fuse 2 Skin (ca. 120 MB, bitte kurz warten)..."
+    echo -e "-> Übertrage gepatchte Add-ons & Arctic Fuse 2 Skin (ca. 100 MB, bitte kurz warten)..."
     adb -s "$DEVICE_ID" push "$SCRIPT_DIR/kodi/addons/"* "$STAGE_DIR/addons/"
 
     echo -e "-> Installiere Dateien im Kodi-Hauptverzeichnis..."
@@ -156,6 +156,9 @@ cp -rf $STAGE_DIR/* $REMOTE_KODI_DIR/
 rm -rf $STAGE_DIR
 "
 fi
+
+# Entferne archivierte Alt-Komponenten auf dem Zielgerät
+adb -s "$DEVICE_ID" shell "rm -rf $REMOTE_KODI_DIR/addons/plugin.video.adulthideout $REMOTE_KODI_DIR/addons/service.adulthideout.core $REMOTE_KODI_DIR/userdata/keymaps/secret_remote.xml $REMOTE_KODI_DIR/addons/skin.arctic.fuse.2/shortcuts/open_adult.py 2>/dev/null || true"
 
 if [ -n "$EXISTING_TRAKT_TOKEN" ]; then
     echo -e "-> Stelle vorhandenes Trakt-Login auf der Box wieder her..."
@@ -246,10 +249,6 @@ echo -e " 2. ${YELLOW}YouTube Empfehlungen & SmartTube App:${NC}"
 echo -e "    Öffne in Kodi das YouTube Add-on (einmalig) und melde dich über"
 echo -e "    ${CYAN}https://google.com/device${NC} an (TV-OAuth ohne Sicherheitsblock)."
 echo -e "    Alternativ öffnet 'YouTube & SmartTube' auch die werbefreie SmartTube-App."
-echo -e ""
-echo -e " 3. ${YELLOW}Erwachsenenbereich (+18 / XXX):${NC}"
-echo -e "    PIN ist standardmäßig ${GREEN}0000${NC}."
-echo -e "    Schnellaufruf: Halte die Zurück-Taste für 5 Sekunden gedrückt."
 echo -e ""
 echo -e "Ausführliche Anleitungen findest du im Ordner: ${BLUE}docs/${NC}"
 echo -e "Viel Spaß mit deinem neuen Heimkino! 🍿"
