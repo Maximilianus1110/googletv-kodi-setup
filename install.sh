@@ -188,7 +188,7 @@ fi
 if [ -n "$TMP_TRAKT_SYNC_SETTINGS" ] && [ -s "$TMP_TRAKT_SYNC_SETTINGS" ]; then
     echo -e "-> Stelle Trakt-Sync OAuth-Sitzung (script.module.tmdbhelper.sync.trakt) wieder her..."
     adb -s "$DEVICE_ID" push "$TMP_TRAKT_SYNC_SETTINGS" "/sdcard/Download/kodi_trakt_sync_settings.xml" >/dev/null
-    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt && cp -f /sdcard/Download/kodi_trakt_sync_settings.xml $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && chmod 777 $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && rm -f /sdcard/Download/kodi_trakt_sync_settings.xml"
+    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt && cp -f /sdcard/Download/kodi_trakt_sync_settings.xml $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && (chmod 777 $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml 2>/dev/null || true) && rm -f /sdcard/Download/kodi_trakt_sync_settings.xml"
     rm -f "$TMP_TRAKT_SYNC_SETTINGS"
     echo -e "${GREEN}✓ Trakt-Sync OAuth-Credentials wurden übernommen!${NC}"
 fi
@@ -220,7 +220,7 @@ with open(path, "w", encoding="utf-8") as f:
     f.write(txt)
 ' "$TMP_GUI_SETTINGS"
         adb -s "$DEVICE_ID" push "$TMP_GUI_SETTINGS" "/sdcard/Download/kodi_guisettings.xml" >/dev/null
-        adb -s "$DEVICE_ID" shell "cp -f /sdcard/Download/kodi_guisettings.xml $REMOTE_KODI_DIR/userdata/guisettings.xml && chmod 777 $REMOTE_KODI_DIR/userdata/guisettings.xml && rm -f /sdcard/Download/kodi_guisettings.xml"
+        adb -s "$DEVICE_ID" shell "cp -f /sdcard/Download/kodi_guisettings.xml $REMOTE_KODI_DIR/userdata/guisettings.xml && (chmod 777 $REMOTE_KODI_DIR/userdata/guisettings.xml 2>/dev/null || true) && rm -f /sdcard/Download/kodi_guisettings.xml"
         echo -e "${GREEN}✓ guisettings.xml optimiert (Updates=Notify, Cache=64 MB, 24p-Sync=2)!${NC}"
     fi
     rm -f "$TMP_GUI_SETTINGS"
