@@ -115,7 +115,7 @@ def apply_kodi21_guisettings_xml(guisettings_path):
         with open(guisettings_path, "r", encoding="utf-8") as f:
             txt = f.read()
         for key, (str_val, _) in KODI_21_GUISETTINGS.items():
-            pat = rf'<setting\s+id="{re.escape(key)}"(?:[^/>]*/\s*>|[^>]*>.*?</setting>)'
+            pat = rf'<setting\s+id="{re.escape(key)}"(?:[^>]*/\s*>|[^>]*>[^<]*</setting>)'
             repl = f'<setting id="{key}">{str_val}</setting>'
             if re.search(pat, txt, flags=re.DOTALL):
                 txt = re.sub(pat, lambda _: repl, txt, flags=re.DOTALL)

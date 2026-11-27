@@ -94,7 +94,7 @@ fi
 "
 echo -e "${GREEN}✓ Sicherung abgelegt in: /sdcard/kodi_backup_${BACKUP_DATE}${NC}"
 
-EXISTING_TRAKT_TOKEN=$(adb -s "$DEVICE_ID" shell "sed -n 's/.*<setting id=\"trakt_token\"[^>]*>\(.*\)<\/setting>.*/\1/p' $REMOTE_KODI_DIR/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml 2>/dev/null" | tr -d '\r' || true)
+EXISTING_TRAKT_TOKEN=$(adb -s "$DEVICE_ID" shell "sed -n 's/.*<setting id=\"trakt_token\"[^/>]*>\([^<]*\)<\/setting>.*/\1/p' $REMOTE_KODI_DIR/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml 2>/dev/null" | tr -d '\r' || true)
 TMP_TRAKT_SYNC_SETTINGS=""
 if adb -s "$DEVICE_ID" shell "test -s $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml" >/dev/null 2>&1; then
     TMP_TRAKT_SYNC_SETTINGS=$(mktemp -t kodi_trakt_sync_settings.XXXXXX)
@@ -179,13 +179,13 @@ token = os.environ["EXISTING_TRAKT_TOKEN"]
 with open(sys.argv[1], "r", encoding="utf-8") as f:
     content = f.read()
 replacement = f"<setting id=\"trakt_token\">{token}</setting>"
-content = re.sub(r"<setting id=\"trakt_token\"[^>]*(?:/>|>.*?</setting>)", lambda _: replacement, content)
+content = re.sub(r"<setting id=\"trakt_token\"(?:[^>]*/>|[^>]*>[^<]*</setting>)", lambda _: replacement, content, count=1)
 with open(sys.argv[2], "w", encoding="utf-8") as f:
     f.write(content)
 ' "$SCRIPT_DIR/kodi/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml" "$TMP_TMDB_SETTINGS"
     else
         ESCAPED_TOKEN=$(printf '%s\n' "$EXISTING_TRAKT_TOKEN" | sed 's/[&/|\\]/\\&/g')
-        sed "s|<setting id=\"trakt_token\"[^>]*/>|<setting id=\"trakt_token\">${ESCAPED_TOKEN}</setting>|g; s|<setting id=\"trakt_token\"[^>]*>.*</setting>|<setting id=\"trakt_token\">${ESCAPED_TOKEN}</setting>|g" \
+        sed "s|<setting id=\"trakt_token\"[^>]*/>|<setting id=\"trakt_token\">${ESCAPED_TOKEN}</setting>|g; s|<setting id=\"trakt_token\"[^/>]*>[^<]*</setting>|<setting id=\"trakt_token\">${ESCAPED_TOKEN}</setting>|g" \
             "$SCRIPT_DIR/kodi/userdata/addon_data/plugin.video.themoviedb.helper/settings.xml" > "$TMP_TMDB_SETTINGS"
     fi
     adb -s "$DEVICE_ID" push "$TMP_TMDB_SETTINGS" "/sdcard/Download/kodi_tmdb_settings.xml" >/dev/null
@@ -280,7 +280,7 @@ updates = {
     "videoplayer.adjustrefreshrate": "2",
 }
 for key, val in updates.items():
-    pat = rf"<setting id=\"{re.escape(key)}\"[^>]*(?:/>|>.*?</setting>)"
+    pat = rf"<setting id=\"{re.escape(key)}\"(?:[^>]*/>|[^>]*>[^<]*</setting>)"
     repl = f"<setting id=\"{key}\">{val}</setting>"
     if re.search(pat, txt):
         txt = re.sub(pat, lambda _: repl, txt)

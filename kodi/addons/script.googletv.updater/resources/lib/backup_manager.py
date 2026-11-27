@@ -35,23 +35,29 @@ def _write_file_text(path, content):
 
 
 def extract_trakt_token_from_xml(xml_text):
-    """Extract the value inside <setting id="trakt_token">...</setting>."""
+    """Extract the value inside <setting id="trakt_token">...</setting> (ignoring self-closing tags)."""
     if not xml_text:
         return ""
-    match = re.search(r'<setting\s+id="trakt_token"[^>]*>(.*?)</setting>', xml_text, flags=re.DOTALL)
+    match = re.search(r'<setting\s+id="trakt_token"[^/>]*>([^<]+)</setting>', xml_text, flags=re.DOTALL)
     if not match:
         return ""
-    return match.group(1).strip()
+    val = match.group(1).strip()
+    if not val or "<" in val or ">" in val:
+        return ""
+    return val
 
 
 def inject_trakt_token_into_xml(xml_text, token):
     """Inject token into <setting id="trakt_token">...</setting> in settings.xml."""
     if not xml_text or not token:
         return xml_text
+    token = token.strip()
+    if not token or "<" in token or ">" in token:
+        return xml_text
     replacement = f'<setting id="trakt_token">{token}</setting>'
-    pattern = r'<setting\s+id="trakt_token"(?:[^/>]*/\s*>|[^>]*>.*?</setting>)'
+    pattern = r'<setting\s+id="trakt_token"(?:[^>]*/\s*>|[^>]*>[^<]*</setting>)'
     if re.search(pattern, xml_text, flags=re.DOTALL):
-        return re.sub(pattern, lambda _: replacement, xml_text, flags=re.DOTALL)
+        return re.sub(pattern, lambda _: replacement, xml_text, count=1, flags=re.DOTALL)
     if "</settings>" in xml_text:
         return xml_text.replace("</settings>", f"    {replacement}\n</settings>")
     return xml_text
