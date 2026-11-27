@@ -963,6 +963,10 @@
         <value>🌙 Nachtmodus: Aus</value>
     </variable>
 
+    <variable name="Label_OSD_NightMode_Badge">
+        <value condition="String.IsEqual(Window(Home).Property(NightMode_Active),true)">AN</value>
+    </variable>
+
     <variable name="Label_VideoHDRCodec">
         <value condition="String.IsEqual(VideoPlayer.HdrType,dolbyvision)">Dolby Vision</value>
         <value condition="String.IsEqual(VideoPlayer.HdrType,hdr10)">HDR</value>

@@ -496,7 +496,8 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
         from xbmc import PlayList, PLAYLIST_VIDEO, Monitor
         from tmdbhelper.lib.addon.thread import SafeThread
         playlist_ready = threading.Event()
-        SafeThread(target=self._fetch_intro_segments, args=(tmdb_id, season, episode, playlist_ready)).start()
+        next_box = {}
+        SafeThread(target=self._fetch_intro_segments, args=(tmdb_id, season, episode, playlist_ready, next_box)).start()
         m = Monitor()
         next_season = int(season)
         next_episode = int(episode) + 1
@@ -513,13 +514,58 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
                     episode=episode,
                     player='xstream.json'
                 )
-                if playlist.size() <= 1 or remaining_in_playlist <= 0:
+                if playlist.size() == 1 and remaining_in_playlist <= 0:
                     pne.update(forced=True, single=False, clear=False)
                 next_list = pne.next_episodes or []
                 if next_list:
-                    info = next_list[0].get('infolabels') or {}
+                    raw_next = next_list[0]
+                    info = dict(raw_next.get('infolabels') or {})
+                    art = dict(raw_next.get('art') or {})
+                    try:
+                        cfg_list = pne.configured_item or []
+                        if cfg_list and cfg_list[0]:
+                            info.update(getattr(cfg_list[0], 'infolabels', None) or {})
+                            art.update(getattr(cfg_list[0], 'art', None) or {})
+                    except Exception:
+                        pass
+                    parent_art = self.player_item.artwork or {}
+                    for k in ('thumb', 'poster', 'fanart', 'landscape', 'clearlogo', 'clearart', 'banner'):
+                        if not art.get(k) and parent_art.get(k):
+                            art[k] = parent_art[k]
+                        tvk = f'tvshow.{k}'
+                        if not art.get(tvk) and (parent_art.get(tvk) or parent_art.get(k)):
+                            art[tvk] = parent_art.get(tvk) or parent_art.get(k)
+                    if not art.get('thumb'):
+                        art['thumb'] = art.get('landscape') or art.get('fanart') or art.get('poster') or ''
+                    if not art.get('tvshow.landscape'):
+                        art['tvshow.landscape'] = art.get('thumb') or art.get('landscape') or art.get('tvshow.fanart') or ''
                     next_season = int(info.get('season') or season)
                     next_episode = int(info.get('episode') or (int(episode) + 1))
+                    showtitle = info.get('tvshowtitle') or self.query or ''
+                    ep_title = info.get('title') or f"Episode {next_episode}"
+                    try:
+                        rating_val = float(info.get('rating') or 0.0)
+                    except (TypeError, ValueError):
+                        rating_val = 0.0
+                    try:
+                        runtime_val = int(info.get('duration') or 0)
+                    except (TypeError, ValueError):
+                        runtime_val = 0
+                    next_box['next_episode'] = {
+                        'episodeid': f"{tmdb_id}.{next_season}.{next_episode}",
+                        'tvshowid': str(tmdb_id),
+                        'title': ep_title,
+                        'showtitle': showtitle,
+                        'season': next_season,
+                        'episode': next_episode,
+                        'plot': info.get('plot') or '',
+                        'rating': rating_val,
+                        'firstaired': info.get('premiered') or info.get('aired') or '',
+                        'playcount': int(info.get('playcount') or 0),
+                        'runtime': runtime_val,
+                        'art': art,
+                    }
+                    next_box['play_url'] = f"plugin://script.module.xstreamscraper/?id={tmdb_id}&season={next_season}&episode={next_episode}"
                 else:
                     has_next = False
         except Exception:
@@ -540,7 +586,7 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
         except Exception:
             pass
 
-    def _fetch_intro_segments(self, tmdb_id, season, episode, playlist_ready=None):
+    def _fetch_intro_segments(self, tmdb_id, season, episode, playlist_ready=None, next_box=None):
         import urllib.request, json, base64
         from xbmc import executeJSONRPC, log as xbmc_log, LOGINFO
         payload = {
@@ -600,7 +646,7 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
                         continue
                     if credits_ms > 60000:
                         credits_start = credits_ms / 1000.0
-                        if total_time > 0 and (total_time * 0.70) <= credits_start < (total_time - 5.0):
+                        if total_time > 0 and (total_time * 0.70) <= credits_start < (total_time - 30.0):
                             payload['notification_offset'] = int(credits_start)
                         break
         except Exception as e:
@@ -608,6 +654,15 @@ class PlayerMonitor(Player, CommonMonitorFunctions):
 
         if playlist_ready is not None:
             playlist_ready.wait(timeout=6.0)
+
+        if isinstance(next_box, dict):
+            if next_box.get('next_episode'):
+                payload['next_episode'] = next_box['next_episode']
+            if next_box.get('play_url'):
+                payload['play_url'] = next_box['play_url']
+
+        if not payload.get('next_episode') and not payload.get('skip_segments') and not payload.get('notification_offset'):
+            return
 
         try:
             b64 = base64.b64encode(json.dumps(payload).encode('utf-8')).decode('ascii')

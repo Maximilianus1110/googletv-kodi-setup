@@ -285,6 +285,7 @@ class UpNextMonitor(Monitor):
         self.playback_manager.handle_demo()
         decoded_data.update(id='%s_play_action' % sender.replace('.SIGNAL', ''))
         self.api.addon_data_received(decoded_data, encoding=encoding)
+        self.player.set_last_file(None)
         self.forget_file_handled_without_data()
         self.player.enable_tracking()
         self.player.reset_queue()

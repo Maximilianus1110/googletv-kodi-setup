@@ -26,7 +26,7 @@ class PlayItem:
         playlist = PlayList(self.api.get_playlistid(playlistid_cache=[None]))
         position = playlist.getposition()
         # A playlist with only one element has no next item and PlayList().getposition() starts counting from zero
-        if playlist.size() > 1 and position < (playlist.size() - 1):
+        if playlist.size() > 1 and 0 <= position < (playlist.size() - 1):
             # Return 1 based index value
             return position + 1
         return False
@@ -48,10 +48,11 @@ class PlayItem:
                 self.log('Change in TV show ID: last: %s / current: %s' % (self.state.current_tv_show_id, current_episode.get('tvshowid')), 2)
                 self.state.current_tv_show_id = current_episode.get('tvshowid')
                 self.state.played_in_a_row = 1
-            source = 'addon' if not position else 'playlist'
             if not episode and position:
                 episode = self.api.get_next_in_playlist(position)
                 source = 'playlist'
+            else:
+                source = 'addon' if (self.api.data.get('play_url') or self.api.data.get('play_info') or not position) else 'playlist'
 
         # Next video from non-addon playlist
         elif position:

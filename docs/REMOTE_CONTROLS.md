@@ -54,7 +54,7 @@ Wenn du im Video **Steuerkreuz Oben (`▲`)** drückst, liegt der Fokus standard
 | **`6007`** | Sprechblase | Untertitel-Menü | Zeigt Untertitelsprache, öffnet bei `<onfocus>` Schnellauswahl `Window 1147` und bei `<onclick>` `ActivateWindow(osdsubtitlesettings)`. |
 | **`6008`** | Filmstreifen | Video-Einstellungen | Öffnet bei `<onfocus>` `Window 1148` und bei `<onclick>` `ActivateWindow(osdvideosettings)`. |
 | **`6009`** | **`🔄` (Pfeile)** | **Stream / Hoster wechseln** *(nur bei Filmen & Serien, nicht Live-TV)* | `CancelAlarm(osd_timeout,true)` → `Dialog.Close(videoosd)` → `RunScript(special://skin/shortcuts/change_stream.py)`. Pausiert das Video, öffnet die Hoster-Liste mit TCP-Ping-Ampel & Voll-Speedtest und setzt an derselben Sekunde (`resume`) fort. |
-| **`6010`** | **`🌙` (Mond)** | **Nachtmodus / Dialog-Booster** | `RunScript(special://skin/shortcuts/toggle_nightmode.py)` + 5s-Timer-Reset über `Defs_OSD_Button`. Schaltet `+10 dB` (`10× volampup`) ein bzw. aus (`10× volampdown`) und blendet das OSD 5 Sekunden danach automatisch aus. |
+| **`6010`** | **`🌙` (Mond)** | **Nachtmodus / Dialog-Booster** | `RunScript(special://skin/shortcuts/toggle_nightmode.py)` + 5s-Timer-Reset über `Defs_OSD_Button`. Schaltet `+10 dB` (`10× volampup`) ein bzw. aus (`10× volampdown`), markiert den Button im eingeschalteten Zustand (`NightMode_Active == true`) mit **`AN`-Badge (`$VAR[Label_OSD_NightMode_Badge]`), `$VAR[ColorHighlight]`-Icon und Kreis-Hintergrund** und blendet das OSD 5 Sekunden danach automatisch aus. |
 
 ---
 
@@ -70,13 +70,13 @@ Diese beiden Dialoge sind eigenständige, nicht-modale `WindowXMLDialog`-Fenster
   * **Zurück (`Back`):** Setzt `dismissed = True` und blendet den Button für den Rest des Intros aus.
 
 ### B. `UpNext`-Popup (`script-upnext-upnext.xml` / [`Includes_OSD.xml`](../kodi/addons/skin.arctic.fuse.2/1080i/Includes_OSD.xml))
-* **Sichtbarkeit:** Zu Beginn des Abspanns (`notification_offset` aus TheIntroDB) oder `15` Sekunden vor Episodenende (auch beim Wechsel auf die nächste Staffel `S+1, E01`).
+* **Sichtbarkeit:** Zu Beginn des Abspanns (`notification_offset` aus TheIntroDB, sofern mindestens 30 Sek. vor Folgenende) oder – falls keine Abspannzeiten bekannt sind – **immer 30 Sekunden vor Episodenende** (`autoPlaySeasonTime = 30`, `autoPlayTimeXS..XL = 30`; auch beim Wechsel auf die nächste Staffel `S+1, E01`).
 * **Fokus:** Liegt sofort auf Button **`3012`** (*„Abspielen“*).
 * **Tasten:**
-  * **Mitte / OK (auf `3012`):** Startet sofort die nächste Folge (`set_watch_now(True)` → `player.playnext()`).
+  * **Mitte / OK (auf `3012`):** Startet sofort die nächste Folge (`set_watch_now(True)` → `self.api.play_addon_item()`).
   * **Rechts + Mitte / OK (auf `4013` → triggert `3013` *„Abbrechen“*):** Bricht den Countdown ab (`set_cancel(True)`). Da `stopAfterClose = false` gesetzt ist, läuft der Abspann der aktuellen Folge bis zum Ende weiter, ohne danach automatisch weiterzuschalten.
   * **Zurück (`Back`):** Schließt das Popup ebenfalls ohne Folgenwechsel (`dismissed = True`, `set_cancel(True)`).
-  * **Keine Taste drücken:** Nach Ablauf des **15-Sekunden-Countdowns** (`autoPlayCreditsTime = 15` bzw. `autoPlayTime = 15`) startet automatisch die nächste Folge über `player.playnext()`.
+  * **Keine Taste drücken:** Nach Ablauf des **15-Sekunden-Countdowns** (`autoPlayCreditsTime = 15`) – ohne Abspannzeiten also **exakt 15 Sekunden vor Folgenende** – startet automatisch die nächste Folge über `self.api.play_addon_item()`.
 
 ---
 

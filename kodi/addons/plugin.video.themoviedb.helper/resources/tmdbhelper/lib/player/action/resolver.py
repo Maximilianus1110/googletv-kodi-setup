@@ -188,11 +188,37 @@ class PlayerResolverNone(PlayerResolverBase):
 
     @cached_property
     def listitem(self):
+        import sys, time
+        from xbmcgui import Window
+        is_resume = any(str(a).lower() == 'resume:true' for a in sys.argv[1:])
+        is_from_start = any(str(a).lower() == 'resume:false' for a in sys.argv[1:])
+        resume_time = self.player.item.details.infoproperties.get('ResumeTime')
+        win = Window(10000)
+        if is_resume and resume_time and float(resume_time) > 0:
+            win.setProperty('xstream.target_resume', f"{float(resume_time)}|{time.time()}")
+            win.clearProperty('xstream.play_from_start')
+        else:
+            win.clearProperty('xstream.target_resume')
+            if is_from_start or (resume_time and float(resume_time) > 0):
+                win.setProperty('xstream.play_from_start', str(time.time()))
+            self.player.item.details.infoproperties.pop('ResumeTime', None)
+            self.player.item.details.infoproperties.pop('TotalTime', None)
+            self.player.item.details.infoproperties.pop('StartOffset', None)
+            self.player.item.details.infoproperties.pop('StartPercent', None)
+            self.player.item.details.infolabels.pop('resumetime', None)
         self.player.item.details.params = {}
         self.player.item.details.path = self.path
         self.player.item.details.infoproperties['isPlayable'] = 'false' if self.is_folder else 'true'
         self.player.item.details.infoproperties['is_folder'] = 'true' if self.is_folder else 'false'
-        return self.player.item.details.get_listitem()
+        li = self.player.item.details.get_listitem()
+        if not is_resume:
+            try:
+                li.getVideoInfoTag().setResumePoint(0.0)
+                li.setProperty('StartOffset', '0')
+                li.setProperty('ResumeTime', '0')
+            except Exception:
+                pass
+        return li
 
     @cached_property
     def next_episodes(self):

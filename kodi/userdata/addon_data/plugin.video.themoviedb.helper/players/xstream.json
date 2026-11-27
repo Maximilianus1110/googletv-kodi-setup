@@ -9,5 +9,5 @@
     },
     "play_movie": "plugin://script.module.xstreamscraper/?id={tmdb}",
     "play_episode": "plugin://script.module.xstreamscraper/?id={tmdb}&season={season}&episode={episode}",
-    "make_playlist": "true"
+    "make_playlist": "false"
 }
