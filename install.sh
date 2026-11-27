@@ -104,6 +104,15 @@ if adb -s "$DEVICE_ID" shell "test -s $REMOTE_KODI_DIR/userdata/addon_data/scrip
     fi
 fi
 
+TMP_UPDATER_SETTINGS=""
+if adb -s "$DEVICE_ID" shell "test -s $REMOTE_KODI_DIR/userdata/addon_data/script.googletv.updater/settings.xml" >/dev/null 2>&1; then
+    TMP_UPDATER_SETTINGS=$(mktemp -t kodi_updater_settings.XXXXXX)
+    if ! adb -s "$DEVICE_ID" pull "$REMOTE_KODI_DIR/userdata/addon_data/script.googletv.updater/settings.xml" "$TMP_UPDATER_SETTINGS" >/dev/null 2>&1; then
+        rm -f "$TMP_UPDATER_SETTINGS"
+        TMP_UPDATER_SETTINGS=""
+    fi
+fi
+
 # 5. Dateien übertragen
 echo -e "\n${YELLOW}[4/5] Übertrage optimierte Add-ons, Skin & Konfigurationen...${NC}"
 LOCKED_ADDONS=""
@@ -157,8 +166,8 @@ rm -rf $STAGE_DIR
 "
 fi
 
-# Entferne archivierte Alt-Komponenten auf dem Zielgerät
-adb -s "$DEVICE_ID" shell "rm -rf $REMOTE_KODI_DIR/addons/plugin.video.adulthideout $REMOTE_KODI_DIR/addons/service.adulthideout.core $REMOTE_KODI_DIR/userdata/keymaps/secret_remote.xml $REMOTE_KODI_DIR/addons/skin.arctic.fuse.2/shortcuts/open_adult.py 2>/dev/null || true"
+# Entferne archivierte Alt-Komponenten sowie gecachte Skin-Includes auf dem Zielgerät
+adb -s "$DEVICE_ID" shell "rm -rf $REMOTE_KODI_DIR/addons/plugin.video.adulthideout $REMOTE_KODI_DIR/addons/service.adulthideout.core $REMOTE_KODI_DIR/userdata/keymaps/secret_remote.xml $REMOTE_KODI_DIR/addons/skin.arctic.fuse.2/shortcuts/open_adult.py $REMOTE_KODI_DIR/addons/skin.arctic.fuse.2/1080i/script-skinvariables-generator-includes--kodiprofile-*.xml 2>/dev/null || true"
 
 if [ -n "$EXISTING_TRAKT_TOKEN" ]; then
     echo -e "-> Stelle vorhandenes Trakt-Login auf der Box wieder her..."
@@ -188,9 +197,70 @@ fi
 if [ -n "$TMP_TRAKT_SYNC_SETTINGS" ] && [ -s "$TMP_TRAKT_SYNC_SETTINGS" ]; then
     echo -e "-> Stelle Trakt-Sync OAuth-Sitzung (script.module.tmdbhelper.sync.trakt) wieder her..."
     adb -s "$DEVICE_ID" push "$TMP_TRAKT_SYNC_SETTINGS" "/sdcard/Download/kodi_trakt_sync_settings.xml" >/dev/null
-    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt && cp -f /sdcard/Download/kodi_trakt_sync_settings.xml $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && chmod 777 $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && rm -f /sdcard/Download/kodi_trakt_sync_settings.xml"
+    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt && cp -f /sdcard/Download/kodi_trakt_sync_settings.xml $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml && (chmod 777 $REMOTE_KODI_DIR/userdata/addon_data/script.module.tmdbhelper.sync.trakt/settings.xml 2>/dev/null || true) && rm -f /sdcard/Download/kodi_trakt_sync_settings.xml"
     rm -f "$TMP_TRAKT_SYNC_SETTINGS"
     echo -e "${GREEN}✓ Trakt-Sync OAuth-Credentials wurden übernommen!${NC}"
+fi
+
+if [ -n "$TMP_UPDATER_SETTINGS" ] && [ -s "$TMP_UPDATER_SETTINGS" ]; then
+    adb -s "$DEVICE_ID" push "$TMP_UPDATER_SETTINGS" "/sdcard/Download/kodi_updater_settings.xml" >/dev/null
+    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/addon_data/script.googletv.updater && cp -f /sdcard/Download/kodi_updater_settings.xml $REMOTE_KODI_DIR/userdata/addon_data/script.googletv.updater/settings.xml && rm -f /sdcard/Download/kodi_updater_settings.xml"
+    rm -f "$TMP_UPDATER_SETTINGS"
+fi
+
+if command -v git &>/dev/null && command -v python3 &>/dev/null && git -C "$SCRIPT_DIR" rev-parse HEAD &>/dev/null; then
+    GIT_BRANCH=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "dev")
+    GIT_SHA=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo "")
+    GIT_MSG=$(git -C "$SCRIPT_DIR" log -1 --pretty=%s 2>/dev/null || echo "")
+    GIT_DATE=$(git -C "$SCRIPT_DIR" log -1 --date=format:'%Y-%m-%d %H:%M' --pretty=%cd 2>/dev/null || echo "")
+    GIT_AUTHOR=$(git -C "$SCRIPT_DIR" log -1 --pretty=%an 2>/dev/null || echo "")
+    TMP_UPDATER_STATE=$(mktemp -t kodi_updater_state.XXXXXX)
+    GIT_BRANCH="$GIT_BRANCH" GIT_SHA="$GIT_SHA" GIT_MSG="$GIT_MSG" GIT_DATE="$GIT_DATE" GIT_AUTHOR="$GIT_AUTHOR" python3 -c '
+import datetime, json, os, sys
+sha = os.environ.get("GIT_SHA", "")
+data = {
+    "repo": "Maximilianus1110/googletv-kodi-setup",
+    "installed_branch": os.environ.get("GIT_BRANCH", "dev"),
+    "installed_sha": sha,
+    "installed_short_sha": sha[:7] if sha else "",
+    "installed_commit_msg": os.environ.get("GIT_MSG", ""),
+    "installed_commit_date": os.environ.get("GIT_DATE", ""),
+    "installed_commit_author": os.environ.get("GIT_AUTHOR", ""),
+    "last_update_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "last_update_mode": "adb_install",
+}
+with open(sys.argv[1], "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+' "$TMP_UPDATER_STATE"
+    adb -s "$DEVICE_ID" push "$TMP_UPDATER_STATE" "/sdcard/Download/kodi_updater_state.json" >/dev/null
+    adb -s "$DEVICE_ID" shell "mkdir -p $REMOTE_KODI_DIR/userdata/addon_data/script.googletv.updater && cp -f /sdcard/Download/kodi_updater_state.json $REMOTE_KODI_DIR/userdata/addon_data/script.googletv.updater/state.json && rm -f /sdcard/Download/kodi_updater_state.json"
+    rm -f "$TMP_UPDATER_STATE"
+    echo -e "${GREEN}✓ On-TV Setup Updater (script.googletv.updater) mit Branch '${GIT_BRANCH}' (${GIT_SHA:0:7}) synchronisiert!${NC}"
+fi
+
+if command -v python3 &>/dev/null && adb -s "$DEVICE_ID" shell "test -f $REMOTE_KODI_DIR/userdata/Database/Addons33.db" >/dev/null 2>&1; then
+    TMP_ADDONS_DB=$(mktemp -t kodi_addons33.XXXXXX)
+    if adb -s "$DEVICE_ID" pull "$REMOTE_KODI_DIR/userdata/Database/Addons33.db" "$TMP_ADDONS_DB" >/dev/null 2>&1; then
+        python3 -c '
+import datetime, sqlite3, sys
+conn = sqlite3.connect(sys.argv[1])
+cur = conn.cursor()
+now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+cur.execute("SELECT id FROM installed WHERE addonID = ?", ("script.googletv.updater",))
+if cur.fetchone():
+    cur.execute("UPDATE installed SET enabled = 1, disabledReason = 0 WHERE addonID = ?", ("script.googletv.updater",))
+else:
+    cur.execute(
+        "INSERT INTO installed (addonID, enabled, installDate, lastUpdated, origin, disabledReason) VALUES (?, 1, ?, ?, ?, 0)",
+        ("script.googletv.updater", now, now, ""),
+    )
+conn.commit()
+conn.close()
+' "$TMP_ADDONS_DB"
+        adb -s "$DEVICE_ID" push "$TMP_ADDONS_DB" "/sdcard/Download/kodi_Addons33.db" >/dev/null
+        adb -s "$DEVICE_ID" shell "rm -f $REMOTE_KODI_DIR/userdata/Database/Addons33.db-shm $REMOTE_KODI_DIR/userdata/Database/Addons33.db-wal $REMOTE_KODI_DIR/userdata/Database/Addons33.db-journal && cp -f /sdcard/Download/kodi_Addons33.db $REMOTE_KODI_DIR/userdata/Database/Addons33.db && (chmod 777 $REMOTE_KODI_DIR/userdata/Database/Addons33.db 2>/dev/null || true) && rm -f /sdcard/Download/kodi_Addons33.db"
+    fi
+    rm -f "$TMP_ADDONS_DB"
 fi
 
 if command -v python3 &>/dev/null && adb -s "$DEVICE_ID" shell "test -f $REMOTE_KODI_DIR/userdata/guisettings.xml" >/dev/null 2>&1; then
@@ -220,7 +290,7 @@ with open(path, "w", encoding="utf-8") as f:
     f.write(txt)
 ' "$TMP_GUI_SETTINGS"
         adb -s "$DEVICE_ID" push "$TMP_GUI_SETTINGS" "/sdcard/Download/kodi_guisettings.xml" >/dev/null
-        adb -s "$DEVICE_ID" shell "cp -f /sdcard/Download/kodi_guisettings.xml $REMOTE_KODI_DIR/userdata/guisettings.xml && chmod 777 $REMOTE_KODI_DIR/userdata/guisettings.xml && rm -f /sdcard/Download/kodi_guisettings.xml"
+        adb -s "$DEVICE_ID" shell "cp -f /sdcard/Download/kodi_guisettings.xml $REMOTE_KODI_DIR/userdata/guisettings.xml && (chmod 777 $REMOTE_KODI_DIR/userdata/guisettings.xml 2>/dev/null || true) && rm -f /sdcard/Download/kodi_guisettings.xml"
         echo -e "${GREEN}✓ guisettings.xml optimiert (Updates=Notify, Cache=64 MB, 24p-Sync=2)!${NC}"
     fi
     rm -f "$TMP_GUI_SETTINGS"
@@ -249,6 +319,10 @@ echo -e " 2. ${YELLOW}YouTube Empfehlungen & SmartTube App:${NC}"
 echo -e "    Öffne in Kodi das YouTube Add-on (einmalig) und melde dich über"
 echo -e "    ${CYAN}https://google.com/device${NC} an (TV-OAuth ohne Sicherheitsblock)."
 echo -e "    Alternativ öffnet 'YouTube & SmartTube' auch die werbefreie SmartTube-App."
+echo -e ""
+echo -e " 3. ${YELLOW}Künftige Updates direkt am Fernseher (ohne PC / ADB):${NC}"
+echo -e "    Power-Symbol (⏻) unten links in Arctic Fuse 2 -> ${CYAN}Setup Updater${NC}"
+echo -e "    (Unterstützt freie GitHub-Branch-Auswahl, Voll-/Schnell-Update & Rollback)."
 echo -e ""
 echo -e "Ausführliche Anleitungen findest du im Ordner: ${BLUE}docs/${NC}"
 echo -e "Viel Spaß mit deinem neuen Heimkino! 🍿"

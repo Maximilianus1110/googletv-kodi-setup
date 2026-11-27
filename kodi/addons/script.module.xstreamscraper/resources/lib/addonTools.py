@@ -50,5 +50,11 @@ def repair(force=False):
 		new_xml.append(' </category>')
 		new_xml.append('</settings>')
 		with open(settingsxml, 'w', encoding='utf-8') as f: f.write('\n'.join(new_xml))
+	try:
+		updater_dir = os.path.join(xbmcvfs.translatePath("special://home/addons"), "script.googletv.updater")
+		if os.path.isdir(updater_dir):
+			xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"script.googletv.updater","enabled":true},"id":1}')
+	except Exception:
+		pass
 	if firststart or force:
 		setup_tmdb_helper()

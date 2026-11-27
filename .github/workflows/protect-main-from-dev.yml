@@ -1,0 +1,22 @@
+name: Protect main (Only merge from dev)
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  only-allow-merge-from-dev:
+    name: only-allow-merge-from-dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify source branch is dev
+        run: |
+          echo "PR source branch: ${{ github.head_ref }}"
+          echo "PR source repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ] || [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "::error::Auf 'main' darf ausschließlich vom Branch 'dev' aus gemergt werden (aktueller Quell-Branch: '${{ github.head_ref }}')."
+            exit 1
+          fi
+          echo "✓ Quell-Branch ist 'dev' – Merge auf 'main' erlaubt."

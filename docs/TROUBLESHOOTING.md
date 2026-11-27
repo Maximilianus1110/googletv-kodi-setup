@@ -30,7 +30,9 @@ Diese Dokumentation erklärt die eingebauten Selbstheilungs-Mechanismen im Code 
 
 ### Wann man den Fehler-Cache zurücksetzen sollte
 Da Timeouts einen Hoster in `stream_failures.json` für **60 Minuten (`FAILED_SECONDS = 3600`)** sperren, kann nach einem kurzen WLAN-Ausfall am Fernseher fast jeder Hoster als fehlerhaft markiert sein.
-* **Lösung per ADB:**
+* **Lösung direkt am Fernseher (ohne PC):**
+  Öffne in Arctic Fuse 2 das **Power-Menü (`⏻`) → `Setup Updater` → `🛠️ Wartung: Hoster-Fehlersperre (stream_failures.json) zurücksetzen`**.
+* **Alternative Lösung per ADB:**
   ```bash
   adb shell "rm -f /sdcard/Android/data/org.xbmc.kodi/files/.kodi/userdata/addon_data/script.module.xstreamscraper/stream_failures.json"
   ```
@@ -43,10 +45,11 @@ Da Timeouts einen Hoster in `stream_failures.json` für **60 Minuten (`FAILED_SE
 Unter Android 11+ (Scoped Storage) gehören Dateien, die per `adb push` / `tar` über die ADB-Shell (`shell`-User) nach `/sdcard/Android/data/org.xbmc.kodi/files/.kodi/addons/` geschrieben werden, der Gruppe `sdcard_rw` / `ext_data_rw`.
 Wenn Kodi jedoch ein Add-on (wie `plugin.video.themoviedb.helper`, `service.upnext` oder `script.skinvariables`) selbst über das offizielle Kodi-Repository aktualisiert, legt der Kodi-Prozess die neuen Dateien mit dem restriktiven App-Owner `u0_a...` und Berechtigung `700` an. Danach darf die ADB-Shell diese Dateien nicht mehr überschreiben!
 
-### Wie [`install.sh`](../install.sh) das erkennt und verhindert:
-1. **Vorab-Prüfung (Zeilen 109–118):** `install.sh` prüft vor dem Kopieren per `ls -ld`, ob `plugin.video.themoviedb.helper`, `service.upnext` oder `script.skinvariables` dem Owner `u0_a*` gehören, und gibt eine gezielte Warnung aus.
-2. **Automatischer Update-Schutz in `guisettings.xml` (Zeile 203):** Bei jeder Installation setzt `install.sh` in Kodis `userdata/guisettings.xml` den Wert `<setting id="general.addonupdates">1</setting>` (*Nur benachrichtigen, nicht automatisch installieren*), damit Kodi die gepatchten Add-ons nicht überschreibt.
-3. **Lösung, falls ein Ordner bereits gesperrt ist:** Deinstalliere das betroffene Add-on einmalig innerhalb der Kodi-Oberfläche (*Einstellungen → Add-ons → Meine Add-ons → Deinstallieren*) und führe direkt danach `./install.sh` aus.
+### Wie [`install.sh`](../install.sh) und [`script.googletv.updater`](TV_UPDATER_GUIDE.md) das erkennen und verhindern:
+1. **On-TV Update ohne ADB-Berechtigungskonflikt ([`script.googletv.updater`](TV_UPDATER_GUIDE.md)):** Da der integrierte **Setup Updater** direkt *innerhalb* von Kodi unter demselben Android-App-User (`u0_a*`) läuft, besitzt er jederzeit volle Schreibrechte auf alle Add-on-Ordner.
+2. **Vorab-Prüfung in `install.sh` (Zeilen 118–127):** `install.sh` prüft vor dem Kopieren per `ls -ld`, ob `plugin.video.themoviedb.helper`, `service.upnext` oder `script.skinvariables` dem Owner `u0_a*` gehören, und gibt eine gezielte Warnung aus.
+3. **Automatischer Update-Schutz in `guisettings.xml`:** Bei jeder Installation setzen `install.sh` und `script.googletv.updater` in Kodis `userdata/guisettings.xml` den Wert `<setting id="general.addonupdates">1</setting>` (*Nur benachrichtigen, nicht automatisch installieren*), damit Kodi die gepatchten Add-ons nicht überschreibt.
+4. **Lösung, falls ein Ordner bei ADB-Nutzung bereits gesperrt ist:** Aktualisiere direkt am TV über **`Setup Updater`** oder deinstalliere das betroffene Add-on einmalig innerhalb der Kodi-Oberfläche (*Einstellungen → Add-ons → Meine Add-ons → Deinstallieren*) und führe direkt danach `./install.sh` aus.
 
 ---
 
