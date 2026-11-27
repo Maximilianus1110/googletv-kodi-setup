@@ -2,7 +2,7 @@
     <category label="GitHub &amp; Branch">
         <setting id="github_owner" type="text" label="GitHub Besitzer / Organisation" default="Maximilianus1110" />
         <setting id="github_repo" type="text" label="GitHub Repository-Name" default="googletv-kodi-setup" />
-        <setting id="active_branch" type="text" label="Aktiver Branch" default="main" />
+        <setting id="active_branch" type="text" label="Aktiver Branch" default="dev" />
         <setting label="🌿 Branch aus GitHub-Liste auswählen..." type="action" action="RunScript(script.googletv.updater,action=branch)" />
         <setting id="github_token" type="text" option="hidden" label="GitHub Token (optional für private Repos / höhere API-Limits)" default="" />
     </category>

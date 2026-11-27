@@ -74,11 +74,13 @@ def _format_iso_date(iso_str):
 def _sort_branches(branches):
     def _sort_key(b):
         n = b["name"]
-        if n == "main":
+        if n == "dev":
             return (0, n)
-        if n == "master":
+        if n == "main":
             return (1, n)
-        return (2, n.lower())
+        if n == "master":
+            return (2, n)
+        return (3, n.lower())
 
     branches.sort(key=_sort_key)
     return branches

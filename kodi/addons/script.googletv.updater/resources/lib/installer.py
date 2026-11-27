@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ZIP extractor and Kodi setup installer for full and quick updates."""
 
+import glob
 import os
 import re
 import shutil
@@ -90,6 +91,19 @@ def remove_legacy_components(kodi_home):
                 removed.append(rel)
             except OSError:
                 pass
+    skin_cache_pattern = os.path.join(
+        kodi_home,
+        "addons",
+        "skin.arctic.fuse.2",
+        "1080i",
+        "script-skinvariables-generator-includes--kodiprofile-*.xml",
+    )
+    for cached_xml in glob.glob(skin_cache_pattern):
+        try:
+            os.remove(cached_xml)
+            removed.append(os.path.relpath(cached_xml, kodi_home))
+        except OSError:
+            pass
     return removed
 
 

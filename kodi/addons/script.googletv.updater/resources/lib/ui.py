@@ -67,7 +67,7 @@ def get_config(addon=None):
     return {
         "owner": (addon.getSetting("github_owner") or "Maximilianus1110").strip(),
         "repo": (addon.getSetting("github_repo") or "googletv-kodi-setup").strip(),
-        "branch": (addon.getSetting("active_branch") or "main").strip(),
+        "branch": (addon.getSetting("active_branch") or "dev").strip(),
         "token": (addon.getSetting("github_token") or "").strip(),
         "startup_check_mode": _int("startup_check_mode", 1),
         "startup_delay_seconds": max(3, _int("startup_delay_seconds", 15)),

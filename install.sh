@@ -166,8 +166,8 @@ rm -rf $STAGE_DIR
 "
 fi
 
-# Entferne archivierte Alt-Komponenten auf dem Zielgerät
-adb -s "$DEVICE_ID" shell "rm -rf $REMOTE_KODI_DIR/addons/plugin.video.adulthideout $REMOTE_KODI_DIR/addons/service.adulthideout.core $REMOTE_KODI_DIR/userdata/keymaps/secret_remote.xml $REMOTE_KODI_DIR/addons/skin.arctic.fuse.2/shortcuts/open_adult.py 2>/dev/null || true"
+# Entferne archivierte Alt-Komponenten sowie gecachte Skin-Includes auf dem Zielgerät
+adb -s "$DEVICE_ID" shell "rm -rf $REMOTE_KODI_DIR/addons/plugin.video.adulthideout $REMOTE_KODI_DIR/addons/service.adulthideout.core $REMOTE_KODI_DIR/userdata/keymaps/secret_remote.xml $REMOTE_KODI_DIR/addons/skin.arctic.fuse.2/shortcuts/open_adult.py $REMOTE_KODI_DIR/addons/skin.arctic.fuse.2/1080i/script-skinvariables-generator-includes--kodiprofile-*.xml 2>/dev/null || true"
 
 if [ -n "$EXISTING_TRAKT_TOKEN" ]; then
     echo -e "-> Stelle vorhandenes Trakt-Login auf der Box wieder her..."
@@ -209,7 +209,7 @@ if [ -n "$TMP_UPDATER_SETTINGS" ] && [ -s "$TMP_UPDATER_SETTINGS" ]; then
 fi
 
 if command -v git &>/dev/null && command -v python3 &>/dev/null && git -C "$SCRIPT_DIR" rev-parse HEAD &>/dev/null; then
-    GIT_BRANCH=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+    GIT_BRANCH=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "dev")
     GIT_SHA=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo "")
     GIT_MSG=$(git -C "$SCRIPT_DIR" log -1 --pretty=%s 2>/dev/null || echo "")
     GIT_DATE=$(git -C "$SCRIPT_DIR" log -1 --date=format:'%Y-%m-%d %H:%M' --pretty=%cd 2>/dev/null || echo "")
@@ -220,7 +220,7 @@ import datetime, json, os, sys
 sha = os.environ.get("GIT_SHA", "")
 data = {
     "repo": "Maximilianus1110/googletv-kodi-setup",
-    "installed_branch": os.environ.get("GIT_BRANCH", "main"),
+    "installed_branch": os.environ.get("GIT_BRANCH", "dev"),
     "installed_sha": sha,
     "installed_short_sha": sha[:7] if sha else "",
     "installed_commit_msg": os.environ.get("GIT_MSG", ""),
@@ -248,17 +248,17 @@ cur = conn.cursor()
 now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 cur.execute("SELECT id FROM installed WHERE addonID = ?", ("script.googletv.updater",))
 if cur.fetchone():
-    cur.execute("UPDATE installed SET disabled = 0 WHERE addonID = ?", ("script.googletv.updater",))
+    cur.execute("UPDATE installed SET enabled = 1, disabledReason = 0 WHERE addonID = ?", ("script.googletv.updater",))
 else:
     cur.execute(
-        "INSERT INTO installed (addonID, enabled, installDate, lastUpdated, origin, disabled) VALUES (?, 1, ?, ?, ?, 0)",
+        "INSERT INTO installed (addonID, enabled, installDate, lastUpdated, origin, disabledReason) VALUES (?, 1, ?, ?, ?, 0)",
         ("script.googletv.updater", now, now, ""),
     )
 conn.commit()
 conn.close()
-' "$TMP_ADDONS_DB" 2>/dev/null || true
+' "$TMP_ADDONS_DB"
         adb -s "$DEVICE_ID" push "$TMP_ADDONS_DB" "/sdcard/Download/kodi_Addons33.db" >/dev/null
-        adb -s "$DEVICE_ID" shell "rm -f $REMOTE_KODI_DIR/userdata/Database/Addons33.db-shm $REMOTE_KODI_DIR/userdata/Database/Addons33.db-wal && cp -f /sdcard/Download/kodi_Addons33.db $REMOTE_KODI_DIR/userdata/Database/Addons33.db && rm -f /sdcard/Download/kodi_Addons33.db"
+        adb -s "$DEVICE_ID" shell "rm -f $REMOTE_KODI_DIR/userdata/Database/Addons33.db-shm $REMOTE_KODI_DIR/userdata/Database/Addons33.db-wal $REMOTE_KODI_DIR/userdata/Database/Addons33.db-journal && cp -f /sdcard/Download/kodi_Addons33.db $REMOTE_KODI_DIR/userdata/Database/Addons33.db && (chmod 777 $REMOTE_KODI_DIR/userdata/Database/Addons33.db 2>/dev/null || true) && rm -f /sdcard/Download/kodi_Addons33.db"
     fi
     rm -f "$TMP_ADDONS_DB"
 fi

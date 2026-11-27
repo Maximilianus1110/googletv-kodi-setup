@@ -1,7 +1,7 @@
 <settings version="2">
     <setting id="github_owner">Maximilianus1110</setting>
     <setting id="github_repo">googletv-kodi-setup</setting>
-    <setting id="active_branch">main</setting>
+    <setting id="active_branch">dev</setting>
     <setting id="github_token" default="true"></setting>
     <setting id="startup_check_mode">1</setting>
     <setting id="startup_delay_seconds">15</setting>
