@@ -21,6 +21,7 @@ Alle Funktionen sind im Ordner [`docs/`](docs/) anhand des **tatsächlichen Quel
 | 🎮 [**Fernbedienung, OSD-Buttons & Fenster-IDs**](docs/REMOTE_CONTROLS.md) | Komplette Referenz für `player_controls.xml`, alle 10 OSD-Buttons (`6001`–`6010`), Timeline-Slider (`8200`), UpNext-/Skip-Buttons (`3010`/`3012`/`4013`) und Seitenleisten-Navigation. |
 | 🎬 [**Trakt-Integration & 80-%-Scrobbling**](docs/TRAKT_SETUP.md) | `VideoInfoTag`-Metadaten-Injektion (`_listitem`), interne Scrobbler-Zeitmessung, **80-%-Gesehen-Schwelle**, `markWatchedEarly`-Prüfung, Token-Erhalt bei `./install.sh` und die 5 Trakt-Widget-Pfade. |
 | 📺 [**YouTube TV-OAuth & SmartTube-Brücke**](docs/YOUTUBE_SETUP.md) | Gepatchter 1-Schritt TV-Login (`token_types = ['tv']` in `yt_login.py`), persönlicher `FEwhat_to_watch`-Feed + `Meine Abonnements` auf der Startseite und Direktstart von `org.smarttube.stable`. |
+| 🔄 [**On-TV Setup Updater & Branch-Switcher**](docs/TV_UPDATER_GUIDE.md) | Updates direkt am Fernseher ohne PC/ADB über [`script.googletv.updater`](https://github.com/Maximilianus1110/googletv-kodi-updater): Freie GitHub-Branch-Auswahl, Voll- & Schnell-Update, Startup-Update-Check, Vorab-Backup mit Rollback und Erhalt von Trakt-/YouTube-Logins. |
 | 🚀 [**Kodi Autostart & Launcher-Manager**](docs/ANDROID_TV_AUTOSTART.md) | Android Doze-Whitelist & Hintergrund-AppOps (`apply_keep_alive`), automatische Projectivy-Accessibility-Freischaltung und `pm disable-user`-Deaktivierung des Google-TV-Launchers mit Black-Screen-Schutz. |
 | 🛠️ [**Fehlerbehebung & System-Interna**](docs/TROUBLESHOOTING.md) | Cloudflare DoH-DNS-Bypass, `stream_failures.json` (60 Min. TTL), MD5-Selbstheilung (`addonTools.repair`), Android 11+ `u0_a`-Locks, `smartredraw=false` und 64 MB `filecache` in `guisettings.xml`. |
 
@@ -28,6 +29,10 @@ Alle Funktionen sind im Ordner [`docs/`](docs/) anhand des **tatsächlichen Quel
 
 ## ✨ Kernfunktionen & Technische Architektur im Überblick
 
+* 🔄 **Direktes On-TV Setup-Update & GitHub Branch-Switcher (`script.googletv.updater`):**
+  * Direkt im **Power-/System-Menü (`⏻` → `Setup Updater`)** von Arctic Fuse 2 sowie unter *Programm-Add-ons* integriert (eigenständiges Repo: [`Maximilianus1110/googletv-kodi-updater`](https://github.com/Maximilianus1110/googletv-kodi-updater)).
+  * **Freie Branch-Auswahl am TV:** Lädt alle Branches live über die GitHub REST API inkl. Commit-Hash & Commit-Nachricht und ermöglicht den Wechsel auf jeden beliebigen Branch per Fernbedienung.
+  * **Voll-Update, Schnell-Update & Startup-Check:** Unterstützt komplette Setup-Updates, sekundenschnelle Keymap-/Skin-Updates ohne Neustart, automatische Update-Prüfung beim Kodi-Start (`service.py`), komprimierte lokale Backups mit 1-Klick-Rollback sowie automatischen Erhalt von Trakt-Tokens, YouTube-Logins und Stream-Historie.
 * 🎨 **Modernes Netflix-UI (`skin.arctic.fuse.2`):**
   * Vorkonfigurierte Seitenleiste (*Entdecken*, *Filme*, *Serien*, *Live-TV*, *YouTube & SmartTube*) über `script.skinvariables`.
   * `smartredraw = false` und `algorithmdirtyregions = 3` in [`advancedsettings.xml`](kodi/userdata/advancedsettings.xml) für flüssige 60fps-Navigation ohne unsichtbare Dialoge bei pausiertem Video.
@@ -56,10 +61,10 @@ Alle Funktionen sind im Ordner [`docs/`](docs/) anhand des **tatsächlichen Quel
 
 ---
 
-## 🚀 Schnellstart: 1-Klick Installation via ADB
+## 🚀 Schnellstart: 1-Klick Installation via ADB (und danach Updates direkt am TV)
 
 ### Voraussetzungen
-1. Ein Google TV / Android TV Gerät mit aktiviertem **Entwicklermodus & USB-/Netzwerk-Debugging**.
+1. Ein Google TV / Android TV Gerät mit aktiviertem **Entwicklermodus & USB-/Netzwerk-Debugging** (nur für die allererste Grundinstallation nötig – alle späteren Updates laufen direkt am TV über **`Setup Updater`**!).
 2. **Kodi 21.2 (Omega)** auf dem Gerät installiert (aus dem Google Play Store oder per APK).
 3. Ein PC (Linux, macOS oder Windows mit WSL/Git-Bash) mit installiertem `adb`.
 
@@ -80,8 +85,8 @@ adb connect <IP-DEINES-FERNSEHERS>:5555
 Was [`install.sh`](install.sh) dabei automatisch ausführt:
 1. Stoppt Kodi sauber (`am force-stop org.xbmc.kodi`).
 2. Erstellt ein lokales Backup deiner bisherigen Keymaps und `addon_data` auf dem Fernseher (`/sdcard/kodi_backup_YYYYMMDD_HHMMSS`).
-3. Liest bestehende **Trakt-OAuth-Tokens** vom Gerät aus und stellt sie nach dem Update wieder her.
-4. Überträgt alle Add-ons, Skin-Anpassungen und Keymaps (beschleunigt per `tar`-Bundle über WLAN/USB) und bereinigt archivierte Alt-Komponenten.
+3. Liest bestehende **Trakt-OAuth-Tokens** und Updater-Einstellungen vom Gerät aus und stellt sie nach dem Update wieder her.
+4. Überträgt alle Add-ons (inkl. `script.googletv.updater`), Skin-Anpassungen und Keymaps (beschleunigt per `tar`-Bundle über WLAN/USB), synchronisiert den aktuellen Git-Branch & Commit-Hash in `state.json` und bereinigt archivierte Alt-Komponenten.
 5. Patcht Kodis `guisettings.xml` (**64 MB RAM-Stream-Cache**, **24p-Refresh-Sync** und **Auto-Update-Schutz** `general.addonupdates = 1`).
 6. Aktiviert das **Standby Keep-Alive** (Doze-Whitelist & Hintergrund-AppOps) und startet Kodi neu.
 
@@ -91,9 +96,10 @@ Was [`install.sh`](install.sh) dabei automatisch ausführt:
 
 | Add-on / Modul | ID | Version & Spezifische Code-Anpassungen in diesem Setup |
 | :--- | :--- | :--- |
-| **Arctic Fuse 2** | `skin.arctic.fuse.2` | Gepatcht: OSD-Buttons `6009` (`change_stream.py`) & `6010` (`toggle_nightmode.py`), 5s `AlarmClock(osd_timeout)` mit Reset bei Fokus/Klick, `Label_OSD_Header` & Vorkonfigurierte Shortcut-Menüs |
+| **Google TV Setup Updater** | `script.googletv.updater` | 1.0.0 ([Repo](https://github.com/Maximilianus1110/googletv-kodi-updater)) – On-TV GitHub-Updater mit freier Branch-Auswahl (`github_api.py`), Voll- & Schnell-Update (`installer.py`), Startup-Check (`service.py`), lokalem ZIP-Backup/Rollback (`backup_manager.py`) sowie Erhalt von Trakt-, YouTube- & Historien-Daten |
+| **Arctic Fuse 2** | `skin.arctic.fuse.2` | Gepatcht: OSD-Buttons `6009` (`change_stream.py`) & `6010` (`toggle_nightmode.py`), Power-Menü-Eintrag `Setup Updater`, 5s `AlarmClock(osd_timeout)` mit Reset bei Fokus/Klick, `Label_OSD_Header` & Vorkonfigurierte Shortcut-Menüs |
 | **TheMovieDb Helper** | `plugin.video.themoviedb.helper` | 6.21.2 – Gepatcht in `monitor/player.py` & `player/action/episodes.py`: Staffel- & Staffelwechsel-Queueing (`season + 1`), `_fetch_intro_segments()` (TheIntroDB v4 Intro & Abspann-Offset mit `playlist_ready`-Sync), `_apply_nightmode_if_active()` (+10 dB Persistenz) & `scrobbler_update()`-Schutz |
-| **xStream Scraper** | `script.module.xstreamscraper` | 2026.11.02.7 – Gepatcht in `scraper.py`, `streamTest.py`, `streamHistory.py`: 2-Stufen-Suche (`serienstream`/`vavoo`), `pre_resolve()` RAM-Cache, `get_episode_title()`, `select_and_play()` mit `_HOSTER_DOMAINS` TCP-Ping-Ampel, Voll-Benchmark aller Streams & Resume, 10s HLS-Segment-Prüfung, `PlaybackWatcher` (5× Failover) & `VideoInfoTag`-Injektion |
+| **xStream Scraper** | `script.module.xstreamscraper` | 2026.11.02.7 – Gepatcht in `scraper.py`, `streamTest.py`, `streamHistory.py`, `addonTools.py`: 2-Stufen-Suche (`serienstream`/`vavoo`), `pre_resolve()` RAM-Cache, `get_episode_title()`, `select_and_play()` mit `_HOSTER_DOMAINS` TCP-Ping-Ampel, Voll-Benchmark aller Streams & Resume, 10s HLS-Segment-Prüfung, `PlaybackWatcher` (5× Failover), `VideoInfoTag`-Injektion & Auto-Aktivierung von `script.googletv.updater` |
 | **xStream** | `plugin.video.xstream` | 2026.10.06~nightly – Gepatcht in `requestHandler.py`: `quietWindows()` Context-Manager (unterdrückt Dialoge bei Autoplay/Preload) & Cloudflare DoH-DNS-Bypass (`__doh_request`) |
 | **Up Next (Autoplay)** | `service.upnext` | 1.3.4 – Gepatcht in `api.py`, `playbackmanager.py`, `skip.py` & `settings.xml`: Manuelles `Intro skip`-Overlay (`autoSkipIntro = false`), `includeWatched = true` sowie **15-Sekunden-Countdown mit aktivem `player.playnext()` bei Abspannbeginn und Episodenende** (`autoPlayCreditsTime = 15`) |
 | **YouTube** | `plugin.video.youtube` | 7.4.4 – Gepatcht in `yt_login.py`: `token_types = ['tv']` (1-Schritt TV-Client OAuth ohne Google-Sicherheitsblockade) |

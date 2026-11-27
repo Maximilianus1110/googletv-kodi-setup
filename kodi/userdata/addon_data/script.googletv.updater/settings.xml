@@ -1,0 +1,13 @@
+<settings version="2">
+    <setting id="github_owner">Maximilianus1110</setting>
+    <setting id="github_repo">googletv-kodi-setup</setting>
+    <setting id="active_branch">main</setting>
+    <setting id="github_token" default="true"></setting>
+    <setting id="startup_check_mode">1</setting>
+    <setting id="startup_delay_seconds">15</setting>
+    <setting id="create_backup">true</setting>
+    <setting id="max_backups">3</setting>
+    <setting id="preserve_trakt">true</setting>
+    <setting id="preserve_youtube">true</setting>
+    <setting id="preserve_history">true</setting>
+</settings>

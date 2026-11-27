@@ -1,0 +1,24 @@
+<settings>
+    <category label="GitHub &amp; Branch">
+        <setting id="github_owner" type="text" label="GitHub Besitzer / Organisation" default="Maximilianus1110" />
+        <setting id="github_repo" type="text" label="GitHub Repository-Name" default="googletv-kodi-setup" />
+        <setting id="active_branch" type="text" label="Aktiver Branch" default="main" />
+        <setting label="🌿 Branch aus GitHub-Liste auswählen..." type="action" action="RunScript(script.googletv.updater,action=branch)" />
+        <setting id="github_token" type="text" option="hidden" label="GitHub Token (optional für private Repos / höhere API-Limits)" default="" />
+    </category>
+    <category label="Automatisches Update">
+        <setting id="startup_check_mode" type="enum" label="Beim Kodi-Start auf Updates prüfen" values="Aus (Nur manuell)|Prüfen &amp; Hinweis anzeigen|Automatisch installieren" default="1" />
+        <setting id="startup_delay_seconds" type="number" option="int" label="Verzögerung nach Kodi-Start (Sekunden)" default="15" />
+        <setting label="🚀 Voll-Update jetzt starten" type="action" action="RunScript(script.googletv.updater,action=update)" />
+        <setting label="⚡ Schnell-Update (nur Keymaps &amp; Skin)" type="action" action="RunScript(script.googletv.updater,action=quick)" />
+        <setting label="🔍 Jetzt auf neue Commits prüfen" type="action" action="RunScript(script.googletv.updater,action=check)" />
+    </category>
+    <category label="Datenschutz &amp; Backup">
+        <setting id="create_backup" type="bool" label="Vor jedem Voll-Update lokales Backup anlegen" default="true" />
+        <setting id="max_backups" type="number" option="int" label="Maximale Anzahl lokaler Backups behalten" default="3" visible="eq(-1,true)" />
+        <setting id="preserve_trakt" type="bool" label="Trakt-Login &amp; OAuth-Tokens beim Update erhalten" default="true" />
+        <setting id="preserve_youtube" type="bool" label="YouTube-Login &amp; OAuth-Tokens beim Update erhalten" default="true" />
+        <setting id="preserve_history" type="bool" label="xStream Stream-Historie (stream_history.json) erhalten" default="true" />
+        <setting label="💾 Backup &amp; Rollback Manager öffnen" type="action" action="RunScript(script.googletv.updater,action=backups)" />
+    </category>
+</settings>
