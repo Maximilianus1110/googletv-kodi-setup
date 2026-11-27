@@ -12,19 +12,19 @@ EPISODE_PROPERTIES = ['art', 'dateadded', 'episode', 'file', 'firstaired', 'last
 
 
 def credits_autoplay_deadline(data, play_time, total_time):
-    """Return a playback deadline when a credits offset is known."""
+    """Return a playback deadline after autoPlayCreditsTime (15s) from credits start or popup open."""
     delay = get_setting_int('autoPlayCreditsTime')
     if not delay or delay <= 0:
-        delay = get_setting_int('autoPlaySeasonTime') or 15
-    try:
-        offset = float(data.get('notification_offset'))
-    except (TypeError, ValueError):
-        return None
-    if not 0 < offset < total_time:
-        return None
-    # An earlier notification_time may show the prompt before the credits.
-    # A late prompt still gives the viewer the full configured response time.
-    return min(total_time, max(play_time, offset) + delay)
+        delay = 15
+    offset = None
+    if isinstance(data, dict) and data.get('notification_offset') is not None:
+        try:
+            offset = float(data.get('notification_offset'))
+        except (TypeError, ValueError):
+            offset = None
+    if offset is not None and 0 < offset < total_time:
+        return min(total_time, max(play_time, offset) + delay)
+    return min(total_time, play_time + delay)
 
 
 def get_watched_state(episodeid):
@@ -236,9 +236,9 @@ class Api:
         if self.data.get('notification_time'):
             return int(self.data.get('notification_time'))
 
-        # Some consumers send the offset when the credits start (e.g. Netflix)
+        # Some consumers send the offset when the credits start (e.g. Netflix / TheIntroDB)
         if total_time and self.data.get('notification_offset'):
-            return total_time - int(self.data.get('notification_offset'))
+            return max(get_setting_int('autoPlaySeasonTime') or 30, total_time - int(self.data.get('notification_offset')))
 
         # Use a customized notification time, when configured
         if total_time and get_setting_bool('customAutoPlayTime'):

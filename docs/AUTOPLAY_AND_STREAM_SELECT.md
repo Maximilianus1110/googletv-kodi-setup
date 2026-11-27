@@ -9,11 +9,11 @@
 
 | Funktion | Auslöser | Kern-Dateien & Funktionen | Verhalten im Überblick |
 | :--- | :--- | :--- | :--- |
-| **[1. Staffel- & Staffelwechsel-Queueing](#1-automatisches-staffel--staffelwechsel-queueing-playlist-aufbau)** | Automatisch (`1s` nach Episodenstart) | `tmdbhelper/.../monitor/player.py` → `_queue_episodes_worker()`<br>`tmdbhelper/.../player/action/episodes.py` → `PlayerNextEpisodes.all_episodes` | Reiht alle nachfolgenden Episoden der aktuellen Staffel in `PlayList(PLAYLIST_VIDEO)` ein. Am Staffelende (`<= 1` Restfolge) wird automatisch **`Staffel S+1`** geladen und angehängt. |
+| **[1. Staffel- & Staffelwechsel-Queueing](#1-automatisches-staffel--staffelwechsel-queueing-playlist-aufbau)** | Automatisch (`1s` nach Episodenstart) | `tmdbhelper/.../monitor/player.py` → `_queue_episodes_worker()`<br>`tmdbhelper/.../player/action/episodes.py` → `PlayerNextEpisodes.all_episodes` | Ermittelt alle nachfolgenden Episoden der aktuellen Staffel (am Staffelende `<= 1` Restfolge automatisch inklusive **`Staffel S+1`**) und übergibt `next_episode` & `play_url` an `service.upnext`. |
 | **[2. Hintergrund-Preloading (inkl. Staffelwechsel)](#2-hintergrund-vorabladen-preloading-fr-folge-n1-bzw-s1-e01)** | Automatisch (~`9–12s` nach Episodenstart) | `tmdbhelper/.../monitor/player.py` → `_queue_episodes_worker()`<br>`xstreamscraper/.../scraper.py` → `pre_resolve()` | Ermittelt aus `pne.next_episodes[0]` die exakte nächste Folge (regulär `S, E+1` oder beim Staffelfinale **`S+1, E01`**), löst den Stream lautlos im Hintergrund auf und cacht ihn für 2 Std. im RAM (`Window(10000)`). |
-| **[3. UpNext-Countdown & Auto-Advance](#3-upnext-popup--automatischer-folgenwechsel-abspann--episodenende--staffelwechsel)** | Automatisch bei Abspannbeginn (`notification_offset`) oder `15s` vor Videoende | `tmdbhelper/.../monitor/player.py` → `_fetch_intro_segments()`<br>`service.upnext/.../api.py` → `credits_autoplay_deadline()`<br>`service.upnext/.../playbackmanager.py` → `show_popup_and_wait()` | Synchronisiert über `playlist_ready` mit dem Playlist-Aufbau, blendet das UpNext-Popup mit **15-Sekunden-Countdown** ein und ruft nach Ablauf aktiv **`self.player.playnext()`** auf (auch über Staffelgrenzen und bei `includeWatched = true`). |
-| **[4. In-Player Episoden-Schublade](#4-in-player-episoden-schublade-window-1140--cast-fallback-window-1141)** | **Steuerkreuz Unten (`▼`)** im Vollbild-Video | `keymaps/player_controls.xml`<br>`skin.arctic.fuse.2/1080i/Custom_1140_OSD_Playlist.xml`<br>`skin.arctic.fuse.2/1080i/Includes_Paths.xml` → `Path_OSD_Episodes` | Öffnet bei Serien `Window 1140` mit den verbleibenden Playlist-Folgen (`playlistvideo://`). Bei Einzel-Filmen schließt `1140` sofort und öffnet `Window 1141` (Cast/Besetzung). |
-| **[5. Automatischer Multi-Source Scraper](#5-automatischer-multi-source-scraper-zweistufige-suche--failover)** | Klick auf Film oder Serienfolge | `xstreamscraper/.../scraper.py` → `_search_and_play()`, `PlaybackWatcher`<br>`xstreamscraper/.../streamTest.py` → `check()`<br>`xstreamscraper/.../streamHistory.py` | Zweistufige Suche über 12 aktive xStream-Seiten + VAVOO (Serien: erst `serienstream (DE)`, dann Rest + VAVOO; Filme: erst VAVOO, dann 11 Film-Seiten), 10s-Stream-Check bis zum 1. HLS-Segment, bis zu 5 Player-Failovers. |
+| **[3. UpNext-Banner (30s vor Ende / 15s Auto-Skip)](#3-upnext-popup--automatischer-folgenwechsel-abspann--episodenende--staffelwechsel)** | Automatisch bei Abspannbeginn (`notification_offset`) oder **`30s` vor Folgenende** | `tmdbhelper/.../monitor/player.py` → `_fetch_intro_segments()`<br>`service.upnext/.../api.py` → `credits_autoplay_deadline()`, `notification_time()`<br>`service.upnext/.../playbackmanager.py` → `show_popup_and_wait()`, `launch_popup()` | Blendet das UpNext-Banner bei Abspannbeginn oder (falls unbekannt) **immer 30 Sek. vor Folgenende** mit **15-Sekunden-Countdown** ein und skippt **15 Sek. vor Folgenende** automatisch via `self.api.play_addon_item()`. |
+| **[4. In-Player Episoden-Schublade](#4-in-player-episoden-schublade-window-1140--cast-fallback-window-1141)** | **Steuerkreuz Unten (`▼`)** im Vollbild-Video | `keymaps/player_controls.xml`<br>`skin.arctic.fuse.2/1080i/Custom_1140_OSD_Playlist.xml`<br>`skin.arctic.fuse.2/1080i/Includes_Paths.xml` → `Path_OSD_Episodes` | Öffnet bei Serien `Window 1140` mit den Episoden der Staffel/Playlist. Bei Einzel-Filmen schließt `1140` sofort und öffnet `Window 1141` (Cast/Besetzung). |
+| **[5. Automatischer Multi-Source Scraper & Resume/Start](#5-automatischer-multi-source-scraper-zweistufige-suche--failover)** | Klick auf Film oder Serienfolge (*Fortsetzen* / *Von Anfang an abspielen*) | `tmdbhelper/.../player/action/resolver.py` → `PlayerResolverNone.listitem`<br>`xstreamscraper/.../scraper.py` → `_search_and_play()`, `_enforce_playback_offset()` | Zweistufige Suche über 12 aktive xStream-Seiten + VAVOO, 10s-Stream-Check, bis zu 5 Player-Failovers sowie sekundengenaues Fortsetzen (`resume:true`) bzw. erzwungener Start bei `0:00` (*„Von Anfang an abspielen“*). |
 | **[6. Smarter Stream-Wechsler & Voll-Benchmark](#6-manuelle-stream-auswahl-in-player--kontextmen--live-benchmark-aller-streams)** | **OSD-Button `🔄`** (ID `6009`) oder Kontextmenü *„Abspielen mit...“* | `skin.arctic.fuse.2/shortcuts/change_stream.py`<br>`xstreamscraper/.../scraper.py` → `select_and_play()`, `_ping_candidates()`<br>`xstreamscraper/.../streamTest.py` → `ping_host()`, `probe()` | Sammelt alle Quellen parallel, misst TCP-Ping für **alle** Hoster gleichermaßen (über `_HOSTER_DOMAINS`), prüft beim **Live-Benchmark** sämtliche gelisteten Streams auf echte Auflösung (`4K`/`1080p`/`720p`) und setzt an exakt derselben Sekunde (`resume`) fort. |
 
 ---
@@ -21,22 +21,12 @@
 ## 1. 📋 Automatisches Staffel- & Staffelwechsel-Queueing (Playlist-Aufbau)
 
 ### Kurzüberblick & Bedienung
-Sobald du eine Serienfolge startest, reiht TMDb Helper automatisch alle verbleibenden Folgen der aktuellen Staffel in Kodis Video-Playlist ein. Erreichst du die vorletzte oder letzte Folge einer Staffel, wird automatisch auch die **nächste Staffel (`Staffel S+1`)** ab Folge 1 in die Playlist eingereiht.
+Sobald du eine Serienfolge startest, ermittelt TMDb Helper automatisch die nachfolgenden Folgen der aktuellen Staffel. Erreichst du die vorletzte oder letzte Folge einer Staffel, wird automatisch auch die **nächste Staffel (`Staffel S+1`)** ab Folge 1 einbezogen.
 
 ### Technischer Ablauf im Code
 1. **Trigger bei Stream-Start:** Beim Start des Videos ruft `PlayerMonitor.onAVStarted()` in [`kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/monitor/player.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/monitor/player.py) `get_playingitem()` → `queue_autoplay_episodes()` auf und startet `_queue_episodes_worker(tmdb_id, season, episode)` in einem `SafeThread`.
-2. **Synchronisations-Event (`playlist_ready`):** `_queue_episodes_worker` erzeugt ein `threading.Event()` (`playlist_ready`) und übergibt es an den parallel startenden Thread `_fetch_intro_segments()`, damit `service.upnext` erst dann benachrichtigt wird, wenn die Playlist fertig aufgebaut ist.
-3. **Erkennung von Erststart oder Staffelende (Zeilen 508–524):**
-   Nach `1` Sekunde Wartezeit (`m.waitForAbort(1)`) prüft der Worker die aktive `PlayList(PLAYLIST_VIDEO)`:
-   ```python
-   pos = playlist.getposition()
-   remaining_in_playlist = (playlist.size() - 1 - pos) if (playlist.size() > 0 and pos >= 0) else 0
-   if playlist.size() <= 1 or remaining_in_playlist <= 0:
-       pne.update(forced=True, single=False, clear=False)
-   ```
-   * **`playlist.size() <= 1`:** Trifft beim ersten Start einer Episode zu.
-   * **`remaining_in_playlist <= 0`:** Trifft zu, wenn man mehrere Folgen geschaut hat und nun bei der **letzten Folge der bisherigen Staffel-Playlist** (dem Staffelfinale) angekommen ist.
-4. **Automatischer Einschluss von `Staffel S+1` (`PlayerNextEpisodes.all_episodes` in [`episodes.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/player/action/episodes.py), Zeilen 30–42):**
+2. **Synchronisations-Event (`playlist_ready` & `next_box`):** `_queue_episodes_worker` erzeugt ein `threading.Event()` (`playlist_ready`) sowie ein geteiltes Dictionary `next_box = {}` und übergibt beides an den parallel startenden Thread `_fetch_intro_segments()`.
+3. **Automatischer Einschluss von `Staffel S+1` (`PlayerNextEpisodes.all_episodes` in [`episodes.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/player/action/episodes.py), Zeilen 30–42):**
    ```python
    current_season = BaseViewFactory('episodes', 'tv', self.tmdb_id, season=self.season).data or []
    future_current = [i for i in current_season if self.is_future_episode(i)]
@@ -47,7 +37,9 @@ Sobald du eine Serienfolge startest, reiht TMDb Helper automatisch alle verbleib
    return current_season
    ```
    * Solange in der aktuellen Staffel noch 2 oder mehr Folgen offen sind (`len(future_current) > 1`), wird nur die aktuelle Staffel geladen.
-   * Bei der vorletzten oder letzten Folge (`len(future_current) <= 1`) lädt `all_episodes` automatisch `self.season + 1` nach. Da `is_future_episode()` (Zeilen 81–90) alle Episoden mit `s_number > self.season` als zukünftige Folgen akzeptiert, werden die Folgen der neuen Staffel (`S+1, E01..E_n`) nahtlos an die bestehende Video-Playlist angehängt (`clear=False`).
+   * Bei der vorletzten oder letzten Folge (`len(future_current) <= 1`) lädt `all_episodes` automatisch `self.season + 1` nach.
+4. **Aufbau von `next_episode` und `play_url` für `service.upnext` ([`player.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/monitor/player.py), Zeilen 517–568):**
+   Aus `pne.next_episodes[0]` (sowie `pne.configured_item` und `self.player_item.artwork`) baut `_queue_episodes_worker()` das komplette `next_episode`-Dictionary (`episodeid`, `tvshowid`, `title`, `showtitle`, `season`, `episode`, `plot`, `rating`, `firstaired`, `playcount`, `runtime`, `art`) und die direkte `play_url` (`plugin://script.module.xstreamscraper/?id={tmdb_id}&season={next_season}&episode={next_episode}`) auf und signalisiert im `finally`-Block `playlist_ready.set()`.
 
 ---
 
@@ -57,21 +49,12 @@ Sobald du eine Serienfolge startest, reiht TMDb Helper automatisch alle verbleib
 Nach ca. 9–12 Sekunden Laufzeit der aktuellen Folge sucht und prüft der Scraper im Hintergrund bereits den Stream für die nächste Episode – am Ende einer Staffel automatisch für **Folge 1 der nächsten Staffel (`S+1, E01`)** – und legt die fertige Stream-URL im RAM ab (`0` Sekunden Ladezeit beim Folgenwechsel).
 
 ### Technischer Ablauf im Code
-1. **Exakte Bestimmung der nächsten Folge über Staffelgrenzen ([`player.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/monitor/player.py), Zeilen 522–530):**
-   `_queue_episodes_worker()` liest das erste Element aus `pne.next_episodes` aus:
-   ```python
-   next_list = pne.next_episodes or []
-   if next_list:
-       info = next_list[0].get('infolabels') or {}
-       next_season = int(info.get('season') or season)
-       next_episode = int(info.get('episode') or (int(episode) + 1))
-   else:
-       has_next = False
-   ```
+1. **Exakte Bestimmung der nächsten Folge über Staffelgrenzen ([`player.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/monitor/player.py), Zeilen 517–570):**
+   `_queue_episodes_worker()` liest `next_season` und `next_episode` aus `pne.next_episodes[0]` aus:
    * **Mitten in der Staffel (z. B. `S01E03`):** `next_list[0]` ist `S01E04` → `next_season = 1, next_episode = 4`.
    * **Am Staffelfinale (z. B. `S01E10`, wenn Staffel 2 existiert):** `next_list[0]` ist `S02E01` → `next_season = 2, next_episode = 1`.
    * **Am Serienfinale (keine weitere Folge/Staffel existiert):** `next_list` ist leer → `has_next = False`, der Worker beendet sich ohne unnötigen Preload-Aufruf.
-2. **Trigger nach 8 Sekunden (`m.waitForAbort(8)`, Zeilen 540–547):**
+2. **Trigger nach 8 Sekunden (`m.waitForAbort(8)`, Zeilen 579–586):**
    Ruft im Hintergrund auf:
    ```python
    executebuiltin(f"RunPlugin(plugin://script.module.xstreamscraper/?id={tmdb_id}&season={next_season}&episode={next_episode}&preload=true)")
@@ -80,7 +63,7 @@ Nach ca. 9–12 Sekunden Laufzeit der aktuellen Folge sucht und prüft der Scrap
    * Läuft mit `dialog._silent = True` und `with quietWindows():` komplett unsichtbar im Hintergrund.
    * Prüft zuerst ungespielte Streams auf `serienstream (DE)`, danach als Fallback alle übrigen aktivierten Seiten und VAVOO-Mirrors via `streamTest.check()`.
    * Speichert den ersten funktionierenden Stream über `_set_preload_cache()` für **7200 Sekunden (2 Stunden)** in `xbmcgui.Window(10000)` unter dem Property `xstream.preload.tv.<tmdb_id>.<next_season>.<next_episode>`.
-4. **Sofortstart beim Episoden-/Staffelwechsel (`_search_and_play`, Zeilen 756–762):**
+4. **Sofortstart beim Episoden-/Staffelwechsel (`_search_and_play`, Zeilen 757–763):**
    Startet die nächste Folge (egal ob `S, E+1` oder `S+1, E01`), entnimmt `_get_preload_cache(key, pop=True)` die fertige Stream-URL aus dem RAM, trägt den Hoster in `streamHistory.remember()` ein und übergibt den Stream inkl. echtem TMDb-Episodentitel (`get_episode_title`) sofort an den Kodi-Player.
 
 ---
@@ -88,37 +71,24 @@ Nach ca. 9–12 Sekunden Laufzeit der aktuellen Folge sucht und prüft der Scrap
 ## 3. ⏭️ UpNext-Popup & Automatischer Folgenwechsel (Abspann, Episodenende & Staffelwechsel)
 
 ### Kurzüberblick & Bedienung
-Am Ende einer Serienfolge – entweder **exakt zu Beginn des Abspanns** (falls in TheIntroDB hinterlegt) oder **15 Sekunden vor Ende der Videodatei** – erscheint unten rechts das **UpNext-Popup** (am Staffelfinale bereits mit Titel und Thumbnail von **Staffel `S+1`, Folge `1`**):
-* **Ohne Tastendruck:** Nach Ablauf des **15-Sekunden-Countdowns** schaltet `service.upnext` aktiv per `self.player.playnext()` auf die nächste Folge um.
+Am Ende einer Serienfolge erscheint unten rechts das **UpNext-Banner** (am Staffelfinale bereits mit Titel und Thumbnail von **Staffel `S+1`, Folge `1`**):
+* **Mit bekannten Abspannzeiten (TheIntroDB):** Das Banner erscheint **exakt zu Beginn des Abspanns** (`credits_start`, sofern mindestens 30 Sek. vor Folgenende) und startet einen **15-Sekunden-Countdown**, nach dessen Ablauf automatisch zur nächsten Folge gewechselt wird.
+* **Ohne bekannte Abspannzeiten (Fallback):** Sind für eine Folge keine Abspannzeiten in TheIntroDB hinterlegt, wird das Banner **immer exakt 30 Sekunden vor Folgenende eingeblendet** (`autoPlaySeasonTime = 30`, `autoPlayTimeXS..XL = 30`), zählt **15 Sekunden** herunter (`autoPlayCreditsTime = 15`) und **skippt exakt 15 Sekunden vor Folgenende automatisch** zur nächsten Folge.
 * **Mitte / OK auf „Abspielen“ (Control `3012`, vorfokussiert):** Startet die nächste Folge sofort.
-* **Rechts + OK auf „Abbrechen“ (Control `4013` → `3013`) oder Zurück-Taste:** Schließt das Popup; das aktuelle Video läuft ohne Auto-Wechsel bis zum Ende weiter.
+* **Rechts + OK auf „Abbrechen“ (Control `4013` → `3013`) oder Zurück-Taste:** Schließt das Popup; das aktuelle Video läuft ohne Auto-Wechsel bis zum Ende (`0:00`) weiter.
 * **„Schaust du noch?“ (`StillWatching`):** Erscheint nach **5 automatisch durchgelaufenen Folgen in Folge** (`playedInARow = 5`).
 
 ### Technischer Ablauf im Code
-1. **Abspann-Abfrage & Synchronisation (`_fetch_intro_segments` in [`player.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/monitor/player.py), Zeilen 549–625):**
-   * Initialisiert `payload` für jede Episode mit eindeutiger Episoden- und Serien-ID:
-     ```python
-     payload = {
-         'current_episode': {
-             'episodeid': f"{tmdb_id}.{season}.{episode}",
-             'tvshowid': str(tmdb_id),
-             'season': int(season),
-             'episode': int(episode),
-         }
-     }
-     ```
+1. **Abspann-Abfrage & Payload-Zusammenführung (`_fetch_intro_segments` in [`player.py`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/monitor/player.py), Zeilen 588–682):**
    * Fragt `https://api.theintrodb.org/v4/media?tmdb_id={tmdb_id}&season={season}&episode={episode}` (Timeout `4.0s`) ab und wartet bis zu `5s` (`10 × 0.5s`), falls `self.getTotalTime()` direkt nach Stream-Start noch `0` ist.
-   * Enthält `data.get('credits')` einen gültigen Abspann-Start (`start_ms > 60000` und `total_time * 0.70 <= credits_start < total_time - 5.0`), wird `payload['notification_offset'] = int(credits_start)` gesetzt.
-   * **Warten auf `playlist_ready` (Zeile 604):** `playlist_ready.wait(timeout=6.0)` stellt sicher, dass `_queue_episodes_worker()` die `PlayList(PLAYLIST_VIDEO)` (inkl. `Staffel S+1` am Staffelfinale) bereits aktualisiert hat, bevor `JSONRPC.NotifyAll` (`Other.upnext_data`) an `service.upnext` gesendet wird.
-2. **Tracking & Episodenermittlung in `service.upnext` ([`monitor.py`](../kodi/addons/service.upnext/resources/lib/monitor.py) & [`playitem.py`](../kodi/addons/service.upnext/resources/lib/playitem.py)):**
-   * `UpNextMonitor.onNotification()` empfängt `Other.upnext_data` und aktiviert `self.player.enable_tracking()`.
-   * Da `current_episode.tvshowid` beim Wechsel von Staffel `S` auf Staffel `S+1` identisch bleibt (`str(tmdb_id)`), erkennt `PlayItem.get_next()` (`playitem.py` Zeile 47), dass es sich um dieselbe Serie handelt, und liest über `self.api.get_next_in_playlist(position)` das nächste Element (auch `S+1, E01`) aus `PlayList(PLAYLIST_VIDEO)` aus.
-   * Da `includeWatched = true` in [`settings.xml`](../kodi/userdata/addon_data/service.upnext/settings.xml) gesetzt ist, funktioniert der automatische Übergang auch dann, wenn Folgen oder Staffeln bei Trakt bereits als gesehen markiert waren.
-3. **15-Sekunden-Countdown & aktives `self.player.playnext()` ([`api.py`](../kodi/addons/service.upnext/resources/lib/api.py) & [`playbackmanager.py`](../kodi/addons/service.upnext/resources/lib/playbackmanager.py)):**
-   * **Fall A (Mit Abspann-Offset `notification_offset`):** Popup öffnet sich bei `play_time >= notification_offset`. `credits_autoplay_deadline()` setzt mit `autoPlayCreditsTime = 15` die Deadline auf `min(total_time, max(play_time, offset) + 15)`. Nach 15 Sekunden (`remaining <= 0`) ruft `_update_credits_progress()` `page.set_auto_advance()` auf.
-   * **Fall B (Ohne Abspann-Offset):** Popup öffnet sich 15 Sekunden vor Videoende (`autoPlayTimeXS..XL = 15`). Sobald der Countdown `total_time - play_time <= 1` erreicht (ohne Abbruch), ruft `show_popup_and_wait()` (Zeile 247) ebenfalls `next_up_page.set_auto_advance()` auf.
-   * **Aktiver Wechsel:** In beiden Fällen ist `next_up_page.is_auto_advance() == True`, sodass `launch_popup()` (Zeile 156) sofort **`self.player.playnext()`** ausführt.
-   * Sobald die neue Folge (bzw. `S+1, E01`) startet, feuert erneut `PlayerMonitor.onAVStarted()` und lädt automatisch die Intro-/Abspann-Segmente für die neue Folge sowie den Preload für die darauffolgende Episode.
+   * Enthält `data.get('credits')` einen gültigen Abspann-Start (`start_ms > 60000` und `total_time * 0.70 <= credits_start < total_time - 30.0`), wird `payload['notification_offset'] = int(credits_start)` gesetzt.
+   * Nach `playlist_ready.wait(timeout=6.0)` werden `next_box['next_episode']` und `next_box['play_url']` direkt in `payload` übernommen und Base64-kodiert per `JSONRPC.NotifyAll` (`Other.upnext_data`) an `service.upnext` gesendet.
+2. **Einblend-Zeitpunkt & 15s-Deadline in `service.upnext` ([`api.py`](../kodi/addons/service.upnext/resources/lib/api.py) & [`playbackmanager.py`](../kodi/addons/service.upnext/resources/lib/playbackmanager.py)):**
+   * `Api.notification_time(total_time)` (`api.py` Zeilen 234–256) gibt bei vorhandenem `notification_offset` `max(30, total_time - int(notification_offset))` zurück; ohne `notification_offset` greift der konfigurierte Standardwert von **`30` Sekunden vor Folgenende** (`autoPlaySeasonTime = 30`, `autoPlayTimeXS..XL = 30` in [`settings.xml`](../kodi/userdata/addon_data/service.upnext/settings.xml)).
+   * `credits_autoplay_deadline(data, play_time, total_time)` (`api.py` Zeilen 14–27) berechnet mit `delay = get_setting_int('autoPlayCreditsTime') or 15` immer eine **15-Sekunden-Deadline**:
+     * Mit `notification_offset`: `min(total_time, max(play_time, offset) + 15)` → Auto-Skip 15 Sek. nach Abspannbeginn.
+     * Ohne `notification_offset`: `min(total_time, play_time + 15)` → Da das Banner bei `play_time = total_time - 30` öffnet, liegt die Deadline bei **`total_time - 15`** (Auto-Skip exakt **15 Sekunden vor Folgenende**).
+   * Sobald der 15-Sekunden-Countdown abläuft (`remaining <= 0`), ruft `_update_credits_progress()` `next_up_page.set_auto_advance()` auf, und `launch_popup()` (`playbackmanager.py` Zeile 153) startet die nächste Folge direkt über `self.api.play_addon_item()` (`Player.Open` mit `play_url`).
 
 ---
 
@@ -146,6 +116,9 @@ Am Ende einer Serienfolge – entweder **exakt zu Beginn des Abspanns** (falls i
 3. **10s-Stream-Check & 5× Player-Failover:**
    * `streamTest.check()` prüft jeden aufgelösten Link mit `10s` Zeitlimit (`LIMIT = 10`) bis zum ersten echten HLS-Videosegment (bis zu 4 Playlist-Ebenen tief).
    * `PlaybackWatcher` überwacht nach `setResolvedUrl` für 10 Sekunden, ob Kodi tatsächlich `onAVStarted` meldet, und schaltet bei einem Player-Fehler automatisch bis zu **5-mal (`MAX_FAILOVERS = 5`)** auf den nächsten Stream weiter.
+4. **„Fortsetzen“ (`resume:true`) vs. „Von Anfang an abspielen“ (`resume:false`):**
+   * In [`PlayerResolverNone.listitem()`](../kodi/addons/plugin.video.themoviedb.helper/resources/tmdbhelper/lib/player/action/resolver.py) prüft TMDb Helper `sys.argv` auf `'resume:true'`. Wird im Kodi-Dialog **„Von Anfang an abspielen“** gewählt (kein `'resume:true'`), werden `ResumeTime`, `TotalTime`, `StartOffset`, `StartPercent` und `resumetime` aus den `infoproperties` entfernt, `setResumePoint(0.0)` sowie `StartOffset = '0'` gesetzt und `Window(10000).setProperty('xstream.play_from_start', ...)` hinterlegt.
+   * In [`_play()` und `_enforce_playback_offset()`](../kodi/addons/script.module.xstreamscraper/resources/lib/scraper.py) setzt der Scraper auf dem finalen Stream-`ListItem` ebenfalls `setResumePoint(0.0)` / `StartOffset = '0'` und überwacht die ersten 1,5 Sekunden nach `onAVStarted` in einem Daemon-Thread (`force_zero=True`), um per `player.seekTime(0.0)` sofort auf `0:00` zurückzuspringen, falls Kodi intern einen alten Datenbank-Bookmark anwendet.
 
 ---
 

@@ -853,6 +853,10 @@ def _listitem(url, label, meta=None):
 			if meta.get('resume_time') and float(meta['resume_time']) > 0:
 				info_tag.setResumePoint(float(meta['resume_time']))
 				o.setProperty('StartOffset', str(float(meta['resume_time'])))
+			elif meta.get('play_from_start'):
+				info_tag.setResumePoint(0.0)
+				o.setProperty('StartOffset', '0')
+				o.setProperty('ResumeTime', '0')
 			infodict = {
 				'mediatype': 'episode' if is_tv else 'movie',
 				'title': ep_title or label,
@@ -877,32 +881,68 @@ def _listitem(url, label, meta=None):
 	o.setPath(url)
 	return o, url
 
+def _enforce_playback_offset(target=0.0, force_zero=False):
+	import threading
+	def _worker():
+		try:
+			player = xbmc.Player()
+			monitor = xbmc.Monitor()
+			deadline = time.monotonic() + 8.0
+			while time.monotonic() < deadline and not monitor.abortRequested():
+				if player.isPlayingVideo() and player.getTotalTime() > 0:
+					if force_zero:
+						# Watch first 1.5s after start in case Kodi applies an internal bookmark after onAVStarted
+						check_end = time.monotonic() + 1.5
+						while time.monotonic() < check_end and not monitor.abortRequested():
+							if player.isPlayingVideo() and player.getTime() > 15.0:
+								player.seekTime(0.0)
+								break
+							if monitor.waitForAbort(0.2):
+								break
+					elif target > 0 and player.getTime() < target - 5:
+						player.seekTime(target)
+					break
+				if monitor.waitForAbort(0.25):
+					break
+		except Exception:
+			pass
+	threading.Thread(target=_worker, daemon=True).start()
+
 def _play(url, meta=None):
 	global resolved
+	meta = dict(meta) if isinstance(meta, dict) else {}
+	win = xbmcgui.Window(10000)
+	argv_from_start = any(str(a).lower() == 'resume:false' for a in sys.argv[1:])
+	raw_from_start = win.getProperty('xstream.play_from_start')
+	raw_target_resume = win.getProperty('xstream.target_resume')
+	win.clearProperty('xstream.play_from_start')
+	win.clearProperty('xstream.target_resume')
+
+	if not meta.get('resume_time'):
+		if argv_from_start or (raw_from_start and (time.time() - float(raw_from_start)) < 60):
+			meta['play_from_start'] = True
+		elif raw_target_resume and "|" in raw_target_resume:
+			try:
+				r_val, r_ts = raw_target_resume.split("|", 1)
+				if (time.time() - float(r_ts)) < 60 and float(r_val) > 0:
+					meta['resume_time'] = float(r_val)
+			except Exception:
+				pass
+
 	label = xbmc.getInfoLabel("ListItem.Label")
 	if not label and meta:
 		label = meta.get("title", "")
 	o, path = _listitem(url, label, meta)
 	resolved = True
+	target_resume = float(meta['resume_time']) if (meta.get('resume_time') and float(meta['resume_time']) > 0) else 0.0
+	force_zero = bool(meta.get('play_from_start')) and target_resume <= 0
+	if target_resume > 0 or force_zero:
+		_enforce_playback_offset(target=target_resume, force_zero=force_zero)
 	if len(sys.argv) > 1 and sys.argv[1].isdigit() and int(sys.argv[1]) > 0:
 		xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, o)
 	else:
 		player = xbmc.Player()
 		player.play(path, o)
-		if meta and meta.get('resume_time') and float(meta['resume_time']) > 0:
-			try:
-				target = float(meta['resume_time'])
-				monitor = xbmc.Monitor()
-				deadline = time.monotonic() + 8.0
-				while time.monotonic() < deadline and not monitor.abortRequested():
-					if player.isPlayingVideo() and player.getTotalTime() > 0:
-						if player.getTime() < target - 5:
-							player.seekTime(target)
-						break
-					if monitor.waitForAbort(0.25):
-						break
-			except Exception:
-				pass
 
 def _replay(player, url, label, meta=None):
 	# Der Aufruf von Kodi ist schon mit dem gescheiterten Stream beantwortet, also direkt abspielen.

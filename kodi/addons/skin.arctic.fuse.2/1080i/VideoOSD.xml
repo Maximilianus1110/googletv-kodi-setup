@@ -202,6 +202,8 @@
                         <!-- Button 10: Nachtmodus (Dialog-Booster & DRC) -->
                         <control type="button" id="6010">
                             <include>Defs_OSD_Button</include>
+                            <label>$VAR[Label_OSD_NightMode_Badge]</label>
+                            <textcolor>$VAR[ColorHighlight]</textcolor>
                             <onclick>RunScript(special://skin/shortcuts/toggle_nightmode.py)</onclick>
                             <onup>8200</onup>
                         </control>
@@ -210,6 +212,8 @@
                             <param name="id">6010</param>
                             <param name="groupid">6110</param>
                             <param name="itemgap">osd_itemgap</param>
+                            <param name="iconoffset_condition">String.IsEqual(Window(Home).Property(NightMode_Active),true)</param>
+                            <param name="active_condition">String.IsEqual(Window(Home).Property(NightMode_Active),true)</param>
                         </include>
                     </control>
                 </control>

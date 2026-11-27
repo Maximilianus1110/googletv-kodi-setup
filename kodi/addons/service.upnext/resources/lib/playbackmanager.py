@@ -101,8 +101,8 @@ class PlaybackManager:
             # Don't play next file, but keep playing current file
             return False, True
 
-        # Add next file to playlist if existing playlist is not being used
-        if source != 'playlist':
+        # Add next file to playlist only when neither an active playlist nor an addon play_url/play_info is used
+        if source != 'playlist' and not self.api.has_addon_data():
             queued = self.state.queued = self.api.queue_next_item(episode)
         else:
             queued = False
@@ -149,14 +149,14 @@ class PlaybackManager:
         # Signal to trakt previous episode watched
         event(message='NEXTUPWATCHEDSIGNAL', data={'episodeid': self.state.current_episode_id}, encoding='base64')
         self.remember_watched_state(self.state.current_episode_id, source, episode.get('episodeid'))
-        if source == 'playlist' or queued:
+        if self.api.has_addon_data() and (self.api.data.get('play_url') or self.api.data.get('play_info')):
+            # Play add-on media directly (including at 15s auto-advance or Watch Now button press)
+            self.api.play_addon_item()
+        elif source == 'playlist' or queued:
             # Play playlist media
             if should_play_non_default or next_up_page.is_auto_advance():
                 # Early credits expiry must also advance an already queued item.
                 self.player.playnext()
-        elif self.api.has_addon_data():
-            # Play add-on media
-            self.api.play_addon_item()
         else:
             # Play local media
             self.api.play_kodi_item(episode)
