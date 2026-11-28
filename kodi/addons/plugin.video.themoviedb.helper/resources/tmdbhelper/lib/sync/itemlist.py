@@ -335,10 +335,82 @@ class ItemListSyncDataUpNext(ItemListSyncData):
         sd.additional_keys = self.additional_keys
         return sd
 
+    @staticmethod
+    def _parse_episode_tuple(item_id):
+        try:
+            parts = item_id.split('.')
+            return (int(parts[2]), int(parts[3]))
+        except (AttributeError, IndexError, TypeError, ValueError):
+            return None
+
+    def get_start_position(self):
+        reset_at = self.syncdata.get_value('tv', self.tmdb_id, key='reset_at', item_type='show')
+        next_ep_id = self.syncdata.get_value('tv', self.tmdb_id, key='next_episode_id', item_type='show')
+        start_pos = self._parse_episode_tuple(next_ep_id)
+
+        if not reset_at:
+            watched_rows = self.syncdata.cache.get_list_values(
+                keys=('season_number', 'episode_number',),
+                values=('episode', self.tmdb_id,),
+                conditions='item_type=? AND tmdb_id=? AND last_watched_at IS NOT NULL AND season_number > 0',
+            ) or ()
+            watched_positions = []
+            for row in watched_rows:
+                try:
+                    watched_positions.append((int(row['season_number']), int(row['episode_number'])))
+                except (KeyError, TypeError, ValueError):
+                    continue
+            if watched_positions:
+                max_watched = max(watched_positions)
+                start_pos = max(start_pos, max_watched) if start_pos is not None else max_watched
+
+        self.syncdata.sync('episode', ('playback_progress',))
+        paused_rows = self.syncdata.cache.get_list_values(
+            keys=('season_number', 'episode_number',),
+            values=('episode', self.tmdb_id,),
+            conditions='item_type=? AND tmdb_id=? AND playback_progress > 0 AND playback_progress < 100',
+        ) or ()
+        paused_positions = []
+        for row in paused_rows:
+            try:
+                s_num, e_num = int(row['season_number']), int(row['episode_number'])
+                if start_pos is not None and s_num == 0 and start_pos[0] > 0:
+                    continue
+                paused_positions.append((s_num, e_num))
+            except (KeyError, TypeError, ValueError):
+                continue
+        if paused_positions:
+            min_paused = min(paused_positions)
+            start_pos = min(start_pos, min_paused) if start_pos is not None else min_paused
+
+        return start_pos
+
     def get_presorted_items(self):
+        parsed_items = []
+        for i in self.syncdata_getter.items:
+            ep_pos = self._parse_episode_tuple(i['upnext_episode_id'])
+            if ep_pos is None:
+                continue
+            parsed_items.append((ep_pos, i))
+
+        if not parsed_items:
+            return []
+
+        parsed_items.sort(key=lambda x: (x[0][0] == 0, x[0][0], x[0][1]))
+
+        start_pos = self.get_start_position()
+        if start_pos is not None:
+            filtered_items = [
+                (ep_pos, i) for ep_pos, i in parsed_items
+                if (ep_pos[0] != 0 or start_pos[0] == 0) and ep_pos >= start_pos
+            ]
+            if filtered_items:
+                parsed_items = filtered_items
+
         return [
-            self.namedtuple_episode(i, 'episode', i['upnext_episode_id'].split('.')[2], i['upnext_episode_id'].split('.')[3], )
-            for i in self.syncdata_getter.items]
+            self.namedtuple_episode(i, 'episode', str(ep_pos[0]), str(ep_pos[1]))
+            for ep_pos, i in parsed_items
+        ]
 
     def get_items(self):
         return [self.make_item(i) for i in self.sort_data(self.presorted_items) if i]
