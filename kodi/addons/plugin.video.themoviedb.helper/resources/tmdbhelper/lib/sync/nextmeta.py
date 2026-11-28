@@ -76,18 +76,65 @@ class SyncNextEpisodeItem:
     def is_next_episode(self, season, episode):
         return False
 
+    @staticmethod
+    def is_at_or_after_start_position(season_num, episode_num, start_pos):
+        if start_pos is None:
+            return True
+        try:
+            season_int = int(season_num)
+            episode_int = int(episode_num)
+        except (TypeError, ValueError):
+            return False
+        if season_int == 0 and start_pos[0] > 0:
+            return False
+        return (season_int, episode_int) >= start_pos
+
+    @cached_property
+    def upnext_start_position(self):
+        if self.reset_at:
+            rewatch_id = self.get_rewatch_next_episode_id()
+            if rewatch_id:
+                try:
+                    parts = rewatch_id.split('.')
+                    return (int(parts[2]), int(parts[3]))
+                except (AttributeError, IndexError, TypeError, ValueError):
+                    return None
+            return None
+
+        next_pos = None
+        if self.next_episode and self.next_episode_season is not None and self.next_episode_number is not None:
+            try:
+                next_pos = (int(self.next_episode_season), int(self.next_episode_number))
+            except (TypeError, ValueError):
+                next_pos = None
+
+        last_pos = None
+        last_ep = self.response.get('last_episode') if isinstance(self.response, dict) else None
+        if isinstance(last_ep, dict) and last_ep.get('season') is not None and last_ep.get('number') is not None:
+            try:
+                last_pos = (int(last_ep['season']), int(last_ep['number']))
+            except (TypeError, ValueError):
+                last_pos = None
+
+        if next_pos and last_pos:
+            return max(next_pos, last_pos)
+        return next_pos or last_pos
+
     @cached_property
     def all_next_episodes(self):
         """
-        Returns a generator of all next episodes by comparing againt reset_at date and timestamps
+        Returns a generator of all next episodes starting from current progress
+        by comparing against reset_at date, next/last episode position, and timestamps
         """
         if not self.response:
             return iter(())
 
+        start_pos = self.upnext_start_position
         return (
             self.get_next_episode_id(season['number'], episode['number'])
             for season in self.response_seasons for episode in (season.get('episodes') or [])
             if self.is_next_episode(season, episode)
+            and self.is_at_or_after_start_position(season.get('number'), episode.get('number'), start_pos)
         )
 
     @cached_property
